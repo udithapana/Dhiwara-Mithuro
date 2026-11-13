@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b3d5c">
+<meta name="description" content="ධීවරයන් සඳහා මුහුදු කාලගුණය සහ මාළු සිටිය හැකි කලාප">
+<title>ධීවර මිතුරා</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo">🐟</span><div><h1>ධීවර මිතුරා</h1><small id="dataStamp">දත්ත පූරණය වෙමින්…</small></div></div>
+  <div class="top-actions">
+    <button id="installBtn" class="btn ghost hidden" type="button">ස්ථාපනය</button>
+    <button id="refreshBtn" class="btn ghost" type="button" aria-label="යාවත්කාලීන කරන්න">⟳</button>
+  </div>
+</header>
+
+<div id="offlineBar" class="offline hidden">අන්තර්ජාලය නැත — අවසන් වරට ලබාගත් දත්ත පෙන්වයි</div>
+
+<main>
+  <!-- MAP -->
+  <section id="tab-map" class="tab active">
+    <div id="map"></div>
+    <div class="map-panel">
+      <label><input type="checkbox" id="lyrPfz" checked> මාළු කලාප</label>
+      <label><input type="checkbox" id="lyrDanger"> මුහුදු අවදානම</label>
+      <label><input type="checkbox" id="lyrMarks" checked> මගේ ස්ථාන</label>
+      <div id="dangerDays" class="chips hidden">
+        <button type="button" data-day="0" class="chip on">අද</button>
+        <button type="button" data-day="1" class="chip">හෙට</button>
+        <button type="button" data-day="2" class="chip">අනිද්දා</button>
+      </div>
+    </div>
+    <button id="locateBtn" class="fab" type="button" aria-label="මා සිටින තැන">📍</button>
+    <div class="legend">
+      <div><i style="background:#ff6d00"></i>මාළු ඉඩ වැඩියි</div>
+      <div><i style="background:#ffd600"></i>මාළු ඉඩ මධ්‍යම</div>
+      <div id="legendDanger" class="hidden"><i style="background:#e53935"></i>අවදානම් මුහුද</div>
+    </div>
+    <div id="mapMsg" class="map-msg hidden"></div>
+  </section>
+
+  <!-- WEATHER -->
+  <section id="tab-wx" class="tab">
+    <div class="pad">
+      <div class="row">
+        <select id="placeSel" aria-label="ස්ථානය"></select>
+        <button id="wxGpsBtn" class="btn" type="button">📍 GPS</button>
+      </div>
+      <div id="wxBody"><p class="muted">ස්ථානයක් තෝරන්න…</p></div>
+    </div>
+  </section>
+
+  <!-- ZONES -->
+  <section id="tab-zones" class="tab">
+    <div class="pad">
+      <h2>මාළු සිටිය හැකි හොඳම කලාප</h2>
+      <p class="muted small">දුර සහ දිශාව ගණන් කරන්නේ: <b id="refName">-</b> සිට <span class="muted">(කාලගුණ ටැබයේ ස්ථානය වෙනස් කරන්න)</span></p>
+      <div id="zoneList"><p class="muted">පූරණය වෙමින්…</p></div>
+      <div class="note warn">⚠️ ඉන්දීය මුහුදු සීමාව (IMBL) ආසන්න ප්‍රදේශ මෙම ලැයිස්තුවෙන් ඉවත් කර ඇත. සීමාව මෙම සිතියමේ ලකුණු කර නැත — ඔබේ GPS / VMS සීමා අනතුරු ඇඟවීම් අනුගමනය කරන්න.</div>
+    </div>
+  </section>
+
+  <!-- MY SPOTS -->
+  <section id="tab-marks" class="tab">
+    <div class="pad">
+      <h2>මගේ ස්ථාන</h2>
+      <p class="muted small">හොඳට මාළු අහුවුණ තැන්, ගල්පර, පන්න දැමූ තැන් සටහන් කරගන්න. මේවා තියෙන්නේ ඔබේ දුරකථනයේ පමණයි.</p>
+      <form id="markForm" class="card">
+        <input id="markNote" type="text" maxlength="80" placeholder="සටහන (උදා: කෙලවල්ලා, ගැඹුර 60m)">
+        <button class="btn primary" type="submit">📍 දැන් සිටින තැන සටහන් කරන්න</button>
+        <div id="markMsg" class="small muted"></div>
+      </form>
+      <div id="markList"></div>
+    </div>
+  </section>
+
+  <!-- INFO -->
+  <section id="tab-info" class="tab">
+    <div class="pad prose">
+      <h2>මෙය ක්‍රියා කරන්නේ කොහොමද?</h2>
+      <p><b>මාළු කලාප</b> යනු චන්ද්‍රිකා දත්ත මත ගණනය කළ <b>ඇස්තමේන්තුවක්</b> පමණි — සහතිකයක් නොවේ. මාළු රැස්වීමට ඉඩ වැඩි තැන් හඳුනාගන්නේ:</p>
+      <ul>
+        <li><b>මුහුදු මතුපිට උෂ්ණත්වය (SST)</b> හදිසියේ වෙනස් වන “තාප සීමා” (thermal fronts) — උණුසුම් සහ සීතල ජලය හමුවන තැන්</li>
+        <li><b>හරිතප්‍රද (Chlorophyll)</b> — ප්ලවාංග (plankton) බහුල, මාළුන්ට ආහාර ඇති ජලය</li>
+      </ul>
+      <p class="small muted" id="srcInfo"></p>
+
+      <h3>මුහුදු යාමේ ආරක්ෂාව (කුඩා / එක් දින යාත්‍රා)</h3>
+      <table class="tbl">
+        <tr><th></th><th>සුළඟ km/h</th><th>සුළං රැළි</th><th>රළ උස</th></tr>
+        <tr><td><span class="dot s0"></span>සුදුසුයි</td><td>&lt; 30</td><td>&lt; 45</td><td>&lt; 1.5 m</td></tr>
+        <tr><td><span class="dot s1"></span>පරිස්සමින්</td><td>30–45</td><td>45–60</td><td>1.5–2.5 m</td></tr>
+        <tr><td><span class="dot s2"></span>නොයන්න</td><td>≥ 45</td><td>≥ 60</td><td>≥ 2.5 m</td></tr>
+      </table>
+      <p class="small">ගිගුරුම් සහිත කුණාටු ද සලකා බලයි. <b>කාලගුණ විද්‍යා දෙපාර්තමේන්තුවේ සහ ධීවර දෙපාර්තමේන්තුවේ නිල අනතුරු ඇඟවීම් සැමවිටම මෙම යෙදුමට වඩා ප්‍රමුඛයි.</b></p>
+
+      <h3>නිල තොරතුරු</h3>
+      <ul class="links">
+        <li><a href="https://www.meteo.gov.lk" target="_blank" rel="noopener">කාලගුණ විද්‍යා දෙපාර්තමේන්තුව — meteo.gov.lk</a></li>
+        <li><a href="https://www.nara.ac.lk" target="_blank" rel="noopener">NARA — ධීවර කලාප පුරෝකථන (සඳුදා, බදාදා, සිකුරාදා)</a></li>
+        <li><a href="https://www.fisheries.gov.lk" target="_blank" rel="noopener">ධීවර හා ජලජ සම්පත් දෙපාර්තමේන්තුව</a></li>
+        <li><a href="https://incois.gov.in/portal/osf/srilanka_rimes/index.jsp" target="_blank" rel="noopener">INCOIS — ශ්‍රී ලංකා සාගර තත්ත්ව පුරෝකථනය</a></li>
+      </ul>
+
+      <h3>දත්ත මූලාශ්‍ර</h3>
+      <ul class="small">
+        <li>කාලගුණය සහ රළ: Open-Meteo (open-meteo.com)</li>
+        <li>මුහුදු උෂ්ණත්වය: NASA JPL MUR SST (NOAA CoastWatch ERDDAP)</li>
+        <li>හරිතප්‍රද: NOAA VIIRS gap-filled chlorophyll (NOAA CoastWatch ERDDAP)</li>
+        <li>සිතියම: © OpenStreetMap දායකයින්</li>
+      </ul>
+      <p class="small muted">අන්තර්ජාලය නැති විට අවසන් වරට ලබාගත් දත්ත සහ බලපු සිතියම් කොටස් පෙන්වයි.</p>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button type="button" data-tab="map" class="on"><span>🗺️</span>සිතියම</button>
+  <button type="button" data-tab="wx"><span>🌊</span>කාලගුණය</button>
+  <button type="button" data-tab="zones"><span>🐟</span>කලාප</button>
+  <button type="button" data-tab="marks"><span>📌</span>මගේ</button>
+  <button type="button" data-tab="info"><span>ℹ️</span>තොරතුරු</button>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="calc.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
