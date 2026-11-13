@@ -33,6 +33,7 @@
     <div class="map-panel">
       <label><input type="checkbox" id="lyrPfz" checked> මාළු කලාප</label>
       <label><input type="checkbox" id="lyrDanger"> මුහුදු අවදානම</label>
+      <label><input type="checkbox" id="lyrBounds" checked> මුහුදු සීමා</label>
       <label><input type="checkbox" id="lyrMarks" checked> මගේ ස්ථාන</label>
       <div id="dangerDays" class="chips hidden">
         <button type="button" data-day="0" class="chip on">අද</button>
@@ -44,6 +45,12 @@
     <div class="legend">
       <div><i style="background:#ff6d00"></i>මාළු ඉඩ වැඩියි</div>
       <div><i style="background:#ffd600"></i>මාළු ඉඩ මධ්‍යම</div>
+      <div id="legendBounds">
+        <div><b class="ln" style="border-color:#d50000;border-top-width:4px;border-top-style:solid"></b>ඉන්දියා සීමාව (IMBL)</div>
+        <div><b class="ln" style="border-color:#6a1b9a"></b>EEZ 200 NM</div>
+        <div><b class="ln" style="border-color:#2e7d32"></b>24 NM</div>
+        <div><b class="ln" style="border-color:#1565c0"></b>12 NM</div>
+      </div>
       <div id="legendDanger" class="hidden"><i style="background:#e53935"></i>අවදානම් මුහුද</div>
     </div>
     <div id="mapMsg" class="map-msg hidden"></div>
@@ -66,7 +73,7 @@
       <h2>මාළු සිටිය හැකි හොඳම කලාප</h2>
       <p class="muted small">දුර සහ දිශාව ගණන් කරන්නේ: <b id="refName">-</b> සිට <span class="muted">(කාලගුණ ටැබයේ ස්ථානය වෙනස් කරන්න)</span></p>
       <div id="zoneList"><p class="muted">පූරණය වෙමින්…</p></div>
-      <div class="note warn">⚠️ ඉන්දීය මුහුදු සීමාව (IMBL) ආසන්න ප්‍රදේශ මෙම ලැයිස්තුවෙන් ඉවත් කර ඇත. සීමාව මෙම සිතියමේ ලකුණු කර නැත — ඔබේ GPS / VMS සීමා අනතුරු ඇඟවීම් අනුගමනය කරන්න.</div>
+      <div class="note warn">⚠️ ඉන්දීය මුහුදු සීමාවේ (IMBL) අනෙක් පැත්ත, සීමාවට 2 NM ඇතුළත ප්‍රදේශ සහ 200 NM EEZ ඉන් පිටත ප්‍රදේශ මෙම ලැයිස්තුවෙන් ඉවත් කර ඇත. සිතියමේ රතු රේඛාව IMBL වේ.</div>
     </div>
   </section>
 
@@ -104,6 +111,16 @@
       </table>
       <p class="small">ගිගුරුම් සහිත කුණාටු ද සලකා බලයි. <b>කාලගුණ විද්‍යා දෙපාර්තමේන්තුවේ සහ ධීවර දෙපාර්තමේන්තුවේ නිල අනතුරු ඇඟවීම් සැමවිටම මෙම යෙදුමට වඩා ප්‍රමුඛයි.</b></p>
 
+      <h3>මුහුදු සීමා</h3>
+      <ul class="small">
+        <li><b style="color:#d50000">රතු රේඛාව — ඉන්දියා-ශ්‍රී ලංකා ජාත්‍යන්තර මුහුදු සීමාව (IMBL):</b> 1974 (පෝක් සමුද්‍ර සන්ධිය) සහ 1976 (මන්නාරම් බොක්ක, බෙංගාල බොක්ක) ගිවිසුම් වල නිල ඛණ්ඩාංක මත ඇඳ ඇත. මෙය පසුකර ගියහොත් අත්අඩංගුවට ගැනීමේ අවදානම ඇත.</li>
+        <li><b>ත්‍රි-සන්ධිය (Point T):</b> ශ්‍රී ලංකාව, ඉන්දියාව, මාලදිවයින හමුවන ලක්ෂ්‍යය (4°47.04'N 77°01.40'E).</li>
+        <li><b style="color:#1565c0">12 NM</b> භෞමික මුහුද • <b style="color:#2e7d32">24 NM</b> ආසන්න කලාපය • <b style="color:#6a1b9a">200 NM</b> සුවිශේෂ ආර්ථික කලාපය (EEZ) — මේ තුන වෙරළ රේඛාවේ සිට ගණනය කළ <b>ආසන්න</b> රේඛා වේ (කි.මී. කිහිපයක වෙනසක් තිබිය හැක).</li>
+        <li>තිත් කළු රේඛා: පෝක් සමුද්‍ර සන්ධියේ සහ මන්නාරම් බොක්කේ ඓතිහාසික ජල සීමා.</li>
+        <li>📍 බොත්තම ඔබූ විට ඔබ ඉන්දීය සීමාවට 5 NM ට වඩා ළඟ නම් හෝ සීමාව පසුකර ඇත්නම් අනතුරු ඇඟවීමක් පෙන්වයි.</li>
+      </ul>
+      <p class="small muted">නීතිමය හෝ යාත්‍රා නාවික කටයුතු සඳහා නිල නාවික සිතියම් (Navy / NHO charts) සහ VMS භාවිතා කරන්න.</p>
+
       <h3>නිල තොරතුරු</h3>
       <ul class="links">
         <li><a href="https://www.meteo.gov.lk" target="_blank" rel="noopener">කාලගුණ විද්‍යා දෙපාර්තමේන්තුව — meteo.gov.lk</a></li>
@@ -117,6 +134,7 @@
         <li>කාලගුණය සහ රළ: Open-Meteo (open-meteo.com)</li>
         <li>මුහුදු උෂ්ණත්වය: NASA JPL MUR SST (NOAA CoastWatch ERDDAP)</li>
         <li>හරිතප්‍රද: NOAA VIIRS gap-filled chlorophyll (NOAA CoastWatch ERDDAP)</li>
+        <li>මුහුදු සීමා: ශ්‍රී ලංකා-ඉන්දියා සීමා ගිවිසුම් 1974, 1976 (UN DOALOS)</li>
         <li>සිතියම: © OpenStreetMap දායකයින්</li>
       </ul>
       <p class="small muted">අන්තර්ජාලය නැති විට අවසන් වරට ලබාගත් දත්ත සහ බලපු සිතියම් කොටස් පෙන්වයි.</p>
@@ -133,6 +151,7 @@
 </nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="boundaries.js"></script>
 <script src="calc.js"></script>
 <script src="app.js"></script>
 </body>

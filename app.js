@@ -91,7 +91,9 @@
   var lyrMarks = L.layerGroup().addTo(map);
   var lyrMe = L.layerGroup().addTo(map);
   var lyrHarb = L.layerGroup().addTo(map);
+  var lyrBounds = L.layerGroup().addTo(map);
   var canvasR = L.canvas({ padding: 0.3 });
+  drawBounds();
 
   HARBOURS.forEach(function (h) {
     L.circleMarker([h[1], h[2]], { radius: 4, color: '#0b3d5c', weight: 1, fillColor: '#fff', fillOpacity: 1, renderer: canvasR })
@@ -100,6 +102,10 @@
 
   $('lyrPfz').addEventListener('change', function () {
     if (this.checked) { lyrPfz.addTo(map); lyrHot.addTo(map); } else { map.removeLayer(lyrPfz); map.removeLayer(lyrHot); }
+  });
+  $('lyrBounds').addEventListener('change', function () {
+    if (this.checked) lyrBounds.addTo(map); else map.removeLayer(lyrBounds);
+    $('legendBounds').classList.toggle('hidden', !this.checked);
   });
   $('lyrMarks').addEventListener('change', function () { if (this.checked) lyrMarks.addTo(map); else map.removeLayer(lyrMarks); });
   $('lyrDanger').addEventListener('change', function () {
@@ -144,9 +150,8 @@
       h += 'ලකුණු: <b>' + c[2] + '/100</b> — ' + scoreLabel(c[3]) + '<br>';
       h += 'මුහුදු උෂ්ණත්වය: ' + n1(c[4]) + '°C';
       if (isFinite(c[5]) && c[5] !== null) h += '<br>හරිතප්‍රද: ' + c[5].toFixed(2) + ' mg/m³';
-    } else if (C.isExcluded(lat, lon)) {
-      h += '<span class="small">⚠️ මුහුදු සීමාව ආසන්න ප්‍රදේශයක් — ඇස්තමේන්තු නොකෙරේ</span>';
     }
+    h += '<br>' + boundaryNote(lat, lon);
     if (S.ref) {
       var d = C.distKm(S.ref.lat, S.ref.lon, lat, lon), b = C.bearingDeg(S.ref.lat, S.ref.lon, lat, lon);
       h += '<br><span class="small">' + esc(S.ref.name) + ' සිට ' + n1(d) + ' km (' + n1(d / 1.852) + ' NM), ' + C.compassSi(b) + ' ' + n0(b) + '°</span>';
@@ -211,8 +216,43 @@
       L.circleMarker([p.lat, p.lon], { radius: 7, color: '#fff', weight: 2, fillColor: '#1565c0', fillOpacity: 1 })
         .bindPopup(popupHtml(+p.lat.toFixed(4), +p.lon.toFixed(4), 'මා සිටින තැන')).addTo(lyrMe).openPopup();
       map.setView([p.lat, p.lon], 9);
+      var im = C.imblInfo(p.lat, p.lon), nm = im.km / 1.852;
+      if (!im.slSide) { mapMsg('🚨 <b>ඔබ ඉන්දීය මුහුදු සීමාව පසුකර ඇත!</b> වහාම ශ්‍රී ලංකා මුහුදට ආපසු යන්න.'); buzz(); }
+      else if (nm < 5) { mapMsg('⚠️ <b>ඉන්දීය සීමාවට ' + n1(nm) + ' NM පමණයි.</b> ඉදිරියට නොයන්න.'); buzz(); }
     }).catch(function (e) { mapMsg(gpsErr(e)); setTimeout(function () { mapMsg(''); }, 6000); });
   });
+
+  // ---------- maritime boundaries ----------
+  function buzz() { try { if (navigator.vibrate) navigator.vibrate([300, 150, 300]); } catch (e) {} }
+  function boundaryNote(lat, lon) {
+    var im = C.imblInfo(lat, lon), nm = im.km / 1.852;
+    if (!im.slSide) return '<span class="small" style="color:#c62828"><b>🚫 ඉන්දීය මුහුද</b> — ශ්‍රී ලංකා ධීවරයන්ට ඇතුළු වීම තහනම් (සීමාවේ සිට ' + n1(nm) + ' NM)</span>';
+    var cn = C.coastDistKm(lat, lon) / 1.852, zone;
+    if (cn > 200) zone = 'ශ්‍රී ලංකා EEZ ඉන් පිටත (මහ මුහුද)';
+    else if (cn > 24) zone = 'ශ්‍රී ලංකා සුවිශේෂ ආර්ථික කලාපය (EEZ)';
+    else if (cn > 12) zone = 'ශ්‍රී ලංකා ආසන්න කලාපය (12–24 NM)';
+    else zone = 'ශ්‍රී ලංකා භෞමික මුහුද (12 NM ඇතුළත)';
+    var warn = nm < 5 ? '<b style="color:#c62828">⚠️ ඉන්දීය සීමාවට ' + n1(nm) + ' NM පමණි</b>' : 'ඉන්දීය සීමාවට ' + n0(nm) + ' NM';
+    return '<span class="small">🛟 ' + zone + ' • ' + warn + '</span>';
+  }
+  function drawBounds() {
+    var B = window.DMBounds;
+    var imbl = C.IMBL.map(function (p) { return [p[0], p[1]]; });
+    var tip = '<b>ඉන්දියා–ශ්‍රී ලංකා ජාත්‍යන්තර මුහුදු සීමාව (IMBL)</b><br><span class="small">1974 / 1976 ගිවිසුම් — පසුකර යාම තහනම්</span>';
+    L.polyline(imbl, { color: '#fff', weight: 7, opacity: 0.8, renderer: canvasR, interactive: false }).addTo(lyrBounds);
+    L.polyline(imbl, { color: '#d50000', weight: 4, renderer: canvasR }).bindTooltip(tip, { sticky: true }).addTo(lyrBounds);
+    var t = C.IMBL[C.IMBL.length - 1];
+    L.circleMarker([t[0], t[1]], { radius: 6, color: '#d50000', weight: 2, fillColor: '#fff', fillOpacity: 1, renderer: canvasR })
+      .bindTooltip('<b>ත්‍රි-සන්ධිය (Point T)</b><br><span class="small">ශ්‍රී ලංකා • ඉන්දියාව • මාලදිවයින<br>' + C.fmtDM(t[0], t[1]) + '</span>').addTo(lyrBounds);
+    if (!B) return;
+    function lines(arr, style, label) {
+      arr.forEach(function (l) { L.polyline(l, Object.assign({ renderer: canvasR }, style)).bindTooltip(label, { sticky: true }).addTo(lyrBounds); });
+    }
+    lines(B.eez200, { color: '#6a1b9a', weight: 2.5, dashArray: '10 6' }, '<b>සුවිශේෂ ආර්ථික කලාප (EEZ) සීමාව — 200 NM</b><br><span class="small">ආසන්න රේඛාව</span>');
+    lines(B.cz24, { color: '#2e7d32', weight: 1.5, dashArray: '6 6' }, '<b>ආසන්න කලාප සීමාව — 24 NM</b><br><span class="small">ආසන්න රේඛාව</span>');
+    lines(B.ts12, { color: '#1565c0', weight: 1.5, dashArray: '4 4' }, '<b>භෞමික මුහුදු සීමාව — 12 NM</b><br><span class="small">ආසන්න රේඛාව</span>');
+    lines([B.histMannar, B.histPalk], { color: '#555', weight: 1.5, dashArray: '2 5' }, '<b>ඓතිහාසික ජල සීමාව</b><br><span class="small">පෝක් සමුද්‍ර සන්ධිය / මන්නාරම් බොක්ක</span>');
+  }
 
   // ---------- fishing zones (PFZ) ----------
   function loadMUR() {
@@ -247,7 +287,7 @@
   }
 
   function loadPFZ(force) {
-    var cached = sget('pfz', null);
+    var cached = sget('pfz2', null);
     if (cached && cached.cells) { S.pfz = cached; drawPFZ(); }
     if (!force && cached && Date.now() - cached.time < PFZ_MAX_AGE) return;
     if (!navigator.onLine && cached) return;
@@ -265,7 +305,7 @@
         })
       };
       S.pfz = pack;
-      sset('pfz', pack);
+      sset('pfz2', pack);
       mapMsg('');
       drawPFZ();
     }).catch(function () {
@@ -560,6 +600,7 @@
   }
 
   // ---------- start ----------
+  try { localStorage.removeItem(KEY + 'pfz'); } catch (e) {}   // old cache (before boundary update)
   var place = sget('place', null);
   if (place && isFinite(place.lat)) setPlace(place);
   else setPlace({ name: HARBOURS[0][0], lat: HARBOURS[0][1], lon: HARBOURS[0][2] });

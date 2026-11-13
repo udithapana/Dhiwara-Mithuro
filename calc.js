@@ -4,28 +4,71 @@
 
   // ---------- Area ----------
   // Sri Lanka waters box used for the fishing-zone estimate
-  var BOX = { latMin: 4.5, latMax: 10.0, lonMin: 79.0, lonMax: 83.5 };
+  var BOX = { latMin: 4.5, latMax: 10.6, lonMin: 79.0, lonMax: 83.5 };
 
-  // Crude zone kept OUT of the estimate because it is close to / across the
-  // India–Sri Lanka maritime boundary (Palk Bay, Gulf of Mannar).
-  // This is NOT the real boundary line.
-  function isExcluded(lat, lon) {
-    if (lat > 8.0 && lon < 79.6) return true;   // Gulf of Mannar west side
-    if (lat > 9.4 && lon < 80.0) return true;   // Palk Bay / Palk Strait
-    if (lat > 9.95) return true;                // north of Point Pedro
-    return false;
+  // India–Sri Lanka International Maritime Boundary Line (IMBL), treaty positions
+  // (1974 Palk Strait, 1976 Gulf of Mannar & Bay of Bengal, Nov 1976 extension to
+  // trijunction point T). Ordered Bay of Bengal -> Palk Strait -> Gulf of Mannar -> T.
+  // Sri Lanka's side is on the LEFT when travelling along this order.
+  var IMBL = [
+    [11.44333, 83.36667, '6b'], [11.26667, 82.40667, '5b'], [11.045, 81.93333, '4b'], [10.695, 81.04167, '3b'],
+    [10.55, 80.76667, '2b'], [10.14, 80.15833, '1bb'], [10.09667, 80.08333, '1ba'], [10.08333, 80.05, '1'],
+    [9.95, 79.58333, '2'], [9.66917, 79.37667, '3'], [9.36333, 79.51167, '4'], [9.21667, 79.53333, '5'],
+    [9.1, 79.53333, '6/1m'], [9.0, 79.52167, '2m'], [8.89667, 79.48833, '3m'], [8.66667, 79.30333, '4m'],
+    [8.62, 79.21667, '5m'], [8.52, 79.07833, '6m'], [8.37, 78.92333, '7m'], [8.20333, 78.895, '8m'],
+    [7.58833, 78.76167, '9m'], [7.35, 78.64667, '10m'], [6.51333, 78.20333, '11m'], [5.89833, 77.845, '12m'],
+    [5.0, 77.17667, '13m'], [4.784, 77.02333, 'T']
+  ];
+
+  // Simplified Sri Lanka coastline (lat, lon) — for land tests and distance from shore
+  var SL_POLY = [
+    [9.835, 80.215], [9.818, 80.165], [9.815, 80.045], [9.80, 79.98], [9.76, 79.88], [9.70, 79.86], [9.62, 79.92],
+    [9.58, 80.00], [9.52, 80.12], [9.50, 80.20], [9.42, 80.15], [9.33, 80.10], [9.15, 80.10], [9.02, 80.06],
+    [8.98, 79.95], [9.04, 79.84], [9.08, 79.77], [9.10, 79.72], [9.06, 79.74], [9.00, 79.86], [8.96, 79.92],
+    [8.88, 79.93], [8.79, 79.92], [8.68, 79.92], [8.60, 79.90], [8.53, 79.87], [8.42, 79.80], [8.35, 79.73],
+    [8.25, 79.71], [8.12, 79.70], [8.00, 79.73], [7.85, 79.78], [7.70, 79.80], [7.575, 79.795], [7.41, 79.82],
+    [7.21, 79.83], [7.05, 79.85], [6.93, 79.84], [6.84, 79.86], [6.71, 79.90], [6.58, 79.96], [6.48, 79.98],
+    [6.42, 79.995], [6.235, 80.05], [6.14, 80.10], [6.03, 80.215], [6.01, 80.25], [5.97, 80.42], [5.945, 80.46],
+    [5.92, 80.59], [5.96, 80.70], [6.02, 80.80], [6.07, 80.95], [6.12, 81.12], [6.21, 81.33], [6.30, 81.50],
+    [6.42, 81.62], [6.52, 81.72], [6.76, 81.83], [6.875, 81.835], [7.00, 81.85], [7.12, 81.86], [7.29, 81.86],
+    [7.41, 81.83], [7.58, 81.77], [7.73, 81.70], [7.92, 81.56], [8.05, 81.50], [8.16, 81.42], [8.30, 81.38],
+    [8.45, 81.38], [8.53, 81.32], [8.57, 81.235], [8.70, 81.19], [8.82, 81.10], [8.95, 81.00], [9.10, 80.92],
+    [9.27, 80.82], [9.40, 80.68], [9.47, 80.60], [9.60, 80.45], [9.72, 80.32]
+  ];
+
+  // distance (km) from a point to the segment a-b, local flat approximation
+  function segDistKm(lat, lon, a1, o1, a2, o2) {
+    var kx = 111.32 * Math.cos(lat * Math.PI / 180), ky = 110.57;
+    var px = (lon - o1) * kx, py = (lat - a1) * ky, dx = (o2 - o1) * kx, dy = (a2 - a1) * ky;
+    var t = Math.max(0, Math.min(1, (px * dx + py * dy) / (dx * dx + dy * dy || 1e-12)));
+    return { d: Math.sqrt(Math.pow(px - t * dx, 2) + Math.pow(py - t * dy, 2)), t: t, cross: dx * py - dy * px };
+  }
+  // {km: distance to IMBL, slSide: true if on Sri Lanka's side}
+  function imblInfo(lat, lon) {
+    var best = null;
+    for (var i = 0; i < IMBL.length - 1; i++) {
+      var r = segDistKm(lat, lon, IMBL[i][0], IMBL[i][1], IMBL[i + 1][0], IMBL[i + 1][1]);
+      if (!best || r.d < best.d) best = r;
+    }
+    return { km: best.d, slSide: best.cross > 0 };
+  }
+  function coastDistKm(lat, lon) {
+    var m = Infinity;
+    for (var i = 0; i < SL_POLY.length; i++) {
+      var a = SL_POLY[i], b = SL_POLY[(i + 1) % SL_POLY.length];
+      m = Math.min(m, segDistKm(lat, lon, a[0], a[1], b[0], b[1]).d);
+    }
+    return m;
   }
 
-  // Simplified Sri Lanka coastline (lat, lon) — only for rough land tests
-  var SL_POLY = [
-    [9.83, 80.25], [9.55, 80.60], [9.27, 80.82], [8.95, 80.97], [8.57, 81.23],
-    [8.20, 81.40], [7.92, 81.55], [7.73, 81.70], [7.30, 81.86], [6.88, 81.84],
-    [6.45, 81.70], [6.20, 81.33], [6.12, 81.12], [6.02, 80.80], [5.92, 80.59],
-    [5.95, 80.45], [6.03, 80.22], [6.25, 80.05], [6.48, 79.98], [6.80, 79.88],
-    [7.20, 79.83], [7.57, 79.79], [8.00, 79.83], [8.23, 79.76], [8.55, 79.88],
-    [8.80, 79.92], [8.98, 79.90], [9.30, 80.05], [9.55, 80.00], [9.65, 79.95],
-    [9.80, 80.05]
-  ];
+  // Cells kept OUT of the fishing-zone estimate: India's side of the IMBL,
+  // within 2 NM of the IMBL, or beyond Sri Lanka's 200 NM EEZ (approx.).
+  function isExcluded(lat, lon) {
+    var im = imblInfo(lat, lon);
+    if (!im.slSide || im.km < 2 * 1.852) return true;
+    if (coastDistKm(lat, lon) > 200 * 1.852) return true;
+    return false;
+  }
   function isLandApprox(lat, lon) {
     var inside = false;
     for (var i = 0, j = SL_POLY.length - 1; i < SL_POLY.length; j = i++) {
@@ -274,7 +317,8 @@
   }
 
   var api = {
-    BOX: BOX, isExcluded: isExcluded, isLandApprox: isLandApprox,
+    BOX: BOX, IMBL: IMBL, isExcluded: isExcluded, isLandApprox: isLandApprox,
+    imblInfo: imblInfo, coastDistKm: coastDistKm,
     parseErddapGrid: parseErddapGrid, gridFromPoints: gridFromPoints,
     smoothGrid: smoothGrid, gradientGrid: gradientGrid, sampleGrid: sampleGrid,
     percentile: percentile, chlSuitability: chlSuitability, computePFZ: computePFZ,

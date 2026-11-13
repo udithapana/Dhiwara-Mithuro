@@ -1,13 +1,13 @@
 /* ධීවර මිතුරා service worker — only touches caches named "dheewara-mithura-*" */
 var PREFIX = 'dheewara-mithura-';
-var SHELL = PREFIX + 'shell-v1';
+var SHELL = PREFIX + 'shell-v2';
 var TILES = PREFIX + 'tiles-v1';
 var RUNTIME = PREFIX + 'rt-v1';
 var KEEP = [SHELL, TILES, RUNTIME];
 var MAX_TILES = 600;
 
 var SHELL_FILES = [
-  './', 'index.html', 'style.css', 'calc.js', 'app.js', 'manifest.json',
+  './', 'index.html', 'style.css', 'boundaries.js', 'calc.js', 'app.js', 'manifest.json',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'
