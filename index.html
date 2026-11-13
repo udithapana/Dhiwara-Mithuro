@@ -7,57 +7,62 @@
 <meta name="description" content="ධීවරයන් සඳහා මුහුදු කාලගුණය සහ මාළු සිටිය හැකි කලාප">
 <title>ධීවර මිතුරා</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="dm-icon-192.png">
+<link rel="apple-touch-icon" href="dm-icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 <header class="top">
-  <div class="brand"><span class="logo">🐟</span><div><h1>ධීවර මිතුරා</h1><small id="dataStamp">දත්ත පූරණය වෙමින්…</small></div></div>
+  <div class="brand"><img class="logo" src="dm-icon-192.png" alt="" width="36" height="36"><div><h1 data-i18n="appName">ධීවර මිතුරා</h1><small id="dataStamp" data-i18n="loading">දත්ත පූරණය වෙමින්…</small></div></div>
   <div class="top-actions">
-    <button id="installBtn" class="btn ghost hidden" type="button">ස්ථාපනය</button>
-    <button id="refreshBtn" class="btn ghost" type="button" aria-label="යාවත්කාලීන කරන්න">⟳</button>
+    <select id="langSel" class="lang-sel" data-i18n-aria="language" aria-label="භාෂාව">
+      <option value="si">සිංහල</option>
+      <option value="ta">தமிழ்</option>
+      <option value="en">English</option>
+    </select>
+    <button id="installBtn" class="btn ghost hidden" type="button" data-i18n="install">ස්ථාපනය</button>
+    <button id="refreshBtn" class="btn ghost" type="button" data-i18n-aria="refresh" aria-label="යාවත්කාලීන කරන්න">⟳</button>
   </div>
 </header>
 
-<div id="offlineBar" class="offline hidden">අන්තර්ජාලය නැත — අවසන් වරට ලබාගත් දත්ත පෙන්වයි</div>
+<div id="offlineBar" class="offline hidden" data-i18n="offline">අන්තර්ජාලය නැත — අවසන් වරට ලබාගත් දත්ත පෙන්වයි</div>
 
 <main>
   <!-- MAP -->
   <section id="tab-map" class="tab active">
     <div id="map"></div>
     <div class="map-panel">
-      <label><input type="checkbox" id="lyrPfz" checked> මාළු කලාප</label>
-      <label><input type="checkbox" id="lyrDanger"> මුහුදු අවදානම</label>
-      <label><input type="checkbox" id="lyrBounds" checked> මුහුදු සීමා</label>
-      <label><input type="checkbox" id="lyrShips" checked> කප්පල් මාර්ග</label>
-      <label><input type="checkbox" id="lyrSeamark"> නාවික සලකුණු</label>
-      <label><input type="checkbox" id="lyrMarks" checked> මගේ ස්ථාන</label>
+      <label><input type="checkbox" id="lyrPfz" checked> <span data-i18n="lyrPfz">මාළු කලාප</span></label>
+      <label><input type="checkbox" id="lyrDanger"> <span data-i18n="lyrDanger">මුහුදු අවදානම</span></label>
+      <label><input type="checkbox" id="lyrBounds" checked> <span data-i18n="lyrBounds">මුහුදු සීමා</span></label>
+      <label><input type="checkbox" id="lyrShips" checked> <span data-i18n="lyrShips">කප්පල් මාර්ග</span></label>
+      <label><input type="checkbox" id="lyrSeamark"> <span data-i18n="lyrSeamark">නාවික සලකුණු</span></label>
+      <label><input type="checkbox" id="lyrMarks" checked> <span data-i18n="lyrMarks">මගේ ස්ථාන</span></label>
       <div id="dangerDays" class="chips hidden">
-        <button type="button" data-day="0" class="chip on">අද</button>
-        <button type="button" data-day="1" class="chip">හෙට</button>
-        <button type="button" data-day="2" class="chip">අනිද්දා</button>
+        <button type="button" data-day="0" class="chip on" data-i18n="today">අද</button>
+        <button type="button" data-day="1" class="chip" data-i18n="tomorrow">හෙට</button>
+        <button type="button" data-day="2" class="chip" data-i18n="dayAfter">අනිද්දා</button>
       </div>
     </div>
-    <button id="locateBtn" class="fab" type="button" aria-label="මා සිටින තැන">📍</button>
+    <button id="locateBtn" class="fab" type="button" data-i18n-aria="myPos" aria-label="මා සිටින තැන">📍</button>
     <div class="legend">
-      <div><i style="background:#ff6d00"></i>මාළු ඉඩ වැඩියි</div>
-      <div><i style="background:#ffd600"></i>මාළු ඉඩ මධ්‍යම</div>
+      <div><i style="background:#ff6d00"></i><span data-i18n="fishHigh">මාළු ඉඩ වැඩියි</span></div>
+      <div><i style="background:#ffd600"></i><span data-i18n="fishMid">මාළු ඉඩ මධ්‍යම</span></div>
       <div id="legendBounds">
-        <div><b class="ln" style="border-color:#d50000;border-top-width:4px;border-top-style:solid"></b>ඉන්දියා සීමාව (IMBL)</div>
+        <div><b class="ln" style="border-color:#d50000;border-top-width:4px;border-top-style:solid"></b><span data-i18n="legImbl">ඉන්දියා සීමාව (IMBL)</span></div>
         <div><b class="ln" style="border-color:#6a1b9a"></b>EEZ 200 NM</div>
         <div><b class="ln" style="border-color:#2e7d32"></b>24 NM</div>
         <div><b class="ln" style="border-color:#1565c0"></b>12 NM</div>
       </div>
       <div id="legendShips">
-        <div><i style="background:#d81b60"></i>TSS කප්පල් මාර්ගය</div>
-        <div><i style="background:rgba(142,36,170,.35)"></i>නැව් ගමනාගමනය (ආසන්න)</div>
+        <div><i style="background:#d81b60"></i><span data-i18n="legTss">TSS කප්පල් මාර්ගය</span></div>
+        <div><i style="background:rgba(142,36,170,.35)"></i><span data-i18n="legShip">නැව් ගමනාගමනය (ආසන්න)</span></div>
       </div>
-      <div id="legendDanger" class="hidden"><i style="background:#e53935"></i>අවදානම් මුහුද</div>
+      <div id="legendDanger" class="hidden"><i style="background:#e53935"></i><span data-i18n="legDanger">අවදානම් මුහුද</span></div>
     </div>
     <div id="mapMsg" class="map-msg hidden"></div>
   </section>
@@ -66,31 +71,31 @@
   <section id="tab-wx" class="tab">
     <div class="pad">
       <div class="row">
-        <select id="placeSel" aria-label="ස්ථානය"></select>
+        <select id="placeSel" data-i18n-aria="place" aria-label="ස්ථානය"></select>
         <button id="wxGpsBtn" class="btn" type="button">📍 GPS</button>
       </div>
-      <div id="wxBody"><p class="muted">ස්ථානයක් තෝරන්න…</p></div>
+      <div id="wxBody"><p class="muted" data-i18n="selectPlace">ස්ථානයක් තෝරන්න…</p></div>
     </div>
   </section>
 
   <!-- ZONES -->
   <section id="tab-zones" class="tab">
     <div class="pad">
-      <h2>මාළු සිටිය හැකි හොඳම කලාප</h2>
-      <p class="muted small">දුර සහ දිශාව ගණන් කරන්නේ: <b id="refName">-</b> සිට <span class="muted">(කාලගුණ ටැබයේ ස්ථානය වෙනස් කරන්න)</span></p>
-      <div id="zoneList"><p class="muted">පූරණය වෙමින්…</p></div>
-      <div class="note warn">⚠️ ඉන්දීය මුහුදු සීමාවේ (IMBL) අනෙක් පැත්ත, සීමාවට 2 NM ඇතුළත ප්‍රදේශ සහ 200 NM EEZ ඉන් පිටත ප්‍රදේශ මෙම ලැයිස්තුවෙන් ඉවත් කර ඇත. සිතියමේ රතු රේඛාව IMBL වේ.</div>
+      <h2 data-i18n="zonesTitle">මාළු සිටිය හැකි හොඳම කලාප</h2>
+      <p class="muted small"><span data-i18n="distFrom">දුර සහ දිශාව ගණන් කරන්නේ:</span> <b id="refName">-</b><span data-i18n="distFromEnd"> සිට (කාලගුණ ටැබයේ ස්ථානය වෙනස් කරන්න)</span></p>
+      <div id="zoneList"><p class="muted" data-i18n="loadingShort">පූරණය වෙමින්…</p></div>
+      <div class="note warn" data-i18n="zonesNote"></div>
     </div>
   </section>
 
   <!-- MY SPOTS -->
   <section id="tab-marks" class="tab">
     <div class="pad">
-      <h2>මගේ ස්ථාන</h2>
-      <p class="muted small">හොඳට මාළු අහුවුණ තැන්, ගල්පර, පන්න දැමූ තැන් සටහන් කරගන්න. මේවා තියෙන්නේ ඔබේ දුරකථනයේ පමණයි.</p>
+      <h2 data-i18n="marksTitle">මගේ ස්ථාන</h2>
+      <p class="muted small" data-i18n="marksIntro"></p>
       <form id="markForm" class="card">
-        <input id="markNote" type="text" maxlength="80" placeholder="සටහන (උදා: කෙලවල්ලා, ගැඹුර 60m)">
-        <button class="btn primary" type="submit">📍 දැන් සිටින තැන සටහන් කරන්න</button>
+        <input id="markNote" type="text" maxlength="80" data-i18n-ph="markPh" placeholder="සටහන (උදා: කෙලවල්ලා, ගැඹුර 60m)">
+        <button class="btn primary" type="submit" data-i18n="markBtn">📍 දැන් සිටින තැන සටහන් කරන්න</button>
         <div id="markMsg" class="small muted"></div>
       </form>
       <div id="markList"></div>
@@ -100,77 +105,78 @@
   <!-- INFO -->
   <section id="tab-info" class="tab">
     <div class="pad prose">
-      <h2>මෙය ක්‍රියා කරන්නේ කොහොමද?</h2>
-      <p><b>මාළු කලාප</b> යනු චන්ද්‍රිකා දත්ත මත ගණනය කළ <b>ඇස්තමේන්තුවක්</b> පමණි — සහතිකයක් නොවේ. මාළු රැස්වීමට ඉඩ වැඩි තැන් හඳුනාගන්නේ:</p>
+      <h2 data-i18n="infoH"></h2>
+      <p data-i18n="infoP1"></p>
       <ul>
-        <li><b>මුහුදු මතුපිට උෂ්ණත්වය (SST)</b> හදිසියේ වෙනස් වන “තාප සීමා” (thermal fronts) — උණුසුම් සහ සීතල ජලය හමුවන තැන්</li>
-        <li><b>හරිතප්‍රද (Chlorophyll)</b> — ප්ලවාංග (plankton) බහුල, මාළුන්ට ආහාර ඇති ජලය</li>
+        <li data-i18n="infoLi1"></li>
+        <li data-i18n="infoLi2"></li>
       </ul>
       <p class="small muted" id="srcInfo"></p>
 
-      <h3>මුහුදු යාමේ ආරක්ෂාව (කුඩා / එක් දින යාත්‍රා)</h3>
+      <h3 data-i18n="safetyH"></h3>
       <table class="tbl">
-        <tr><th></th><th>සුළඟ km/h</th><th>සුළං රැළි</th><th>රළ උස</th></tr>
-        <tr><td><span class="dot s0"></span>සුදුසුයි</td><td>&lt; 30</td><td>&lt; 45</td><td>&lt; 1.5 m</td></tr>
-        <tr><td><span class="dot s1"></span>පරිස්සමින්</td><td>30–45</td><td>45–60</td><td>1.5–2.5 m</td></tr>
-        <tr><td><span class="dot s2"></span>නොයන්න</td><td>≥ 45</td><td>≥ 60</td><td>≥ 2.5 m</td></tr>
+        <tr><th></th><th data-i18n="thWind"></th><th data-i18n="thGust"></th><th data-i18n="thWave"></th></tr>
+        <tr><td><span class="dot s0"></span><span data-i18n="sOk"></span></td><td>&lt; 30</td><td>&lt; 45</td><td>&lt; 1.5 m</td></tr>
+        <tr><td><span class="dot s1"></span><span data-i18n="sCare"></span></td><td>30–45</td><td>45–60</td><td>1.5–2.5 m</td></tr>
+        <tr><td><span class="dot s2"></span><span data-i18n="sNo"></span></td><td>≥ 45</td><td>≥ 60</td><td>≥ 2.5 m</td></tr>
       </table>
-      <p class="small">ගිගුරුම් සහිත කුණාටු ද සලකා බලයි. <b>කාලගුණ විද්‍යා දෙපාර්තමේන්තුවේ සහ ධීවර දෙපාර්තමේන්තුවේ නිල අනතුරු ඇඟවීම් සැමවිටම මෙම යෙදුමට වඩා ප්‍රමුඛයි.</b></p>
+      <p class="small" data-i18n="safetyP"></p>
 
-      <h3>මුහුදු සීමා</h3>
+      <h3 data-i18n="boundsH"></h3>
       <ul class="small">
-        <li><b style="color:#d50000">රතු රේඛාව — ඉන්දියා-ශ්‍රී ලංකා ජාත්‍යන්තර මුහුදු සීමාව (IMBL):</b> 1974 (පෝක් සමුද්‍ර සන්ධිය) සහ 1976 (මන්නාරම් බොක්ක, බෙංගාල බොක්ක) ගිවිසුම් වල නිල ඛණ්ඩාංක මත ඇඳ ඇත. මෙය පසුකර ගියහොත් අත්අඩංගුවට ගැනීමේ අවදානම ඇත.</li>
-        <li><b>ත්‍රි-සන්ධිය (Point T):</b> ශ්‍රී ලංකාව, ඉන්දියාව, මාලදිවයින හමුවන ලක්ෂ්‍යය (4°47.04'N 77°01.40'E).</li>
-        <li><b style="color:#1565c0">12 NM</b> භෞමික මුහුද • <b style="color:#2e7d32">24 NM</b> ආසන්න කලාපය • <b style="color:#6a1b9a">200 NM</b> සුවිශේෂ ආර්ථික කලාපය (EEZ) — මේ තුන වෙරළ රේඛාවේ සිට ගණනය කළ <b>ආසන්න</b> රේඛා වේ (කි.මී. කිහිපයක වෙනසක් තිබිය හැක).</li>
-        <li>තිත් කළු රේඛා: පෝක් සමුද්‍ර සන්ධියේ සහ මන්නාරම් බොක්කේ ඓතිහාසික ජල සීමා.</li>
-        <li>📍 බොත්තම ඔබූ විට ඔබ ඉන්දීය සීමාවට 5 NM ට වඩා ළඟ නම් හෝ සීමාව පසුකර ඇත්නම් අනතුරු ඇඟවීමක් පෙන්වයි.</li>
+        <li data-i18n="bLi1"></li>
+        <li data-i18n="bLi2"></li>
+        <li data-i18n="bLi3"></li>
+        <li data-i18n="bLi4"></li>
+        <li data-i18n="bLi5"></li>
       </ul>
-      <h3>කප්පල් ගමන් මාර්ග</h3>
+      <h3 data-i18n="shipsH"></h3>
       <ul class="small">
-        <li><b style="color:#ad1457">දොන්ද්‍ර තුඩුව Traffic Separation Scheme (TSS):</b> IMO විසින් 1980 දී ස්ථාපිත කළ නිල නැව් මාර්ගය (Ships' Routeing ඛණ්ඩාංක). දොන්ද්‍ර තුඩුවට දකුණින් NM 3–4 පමණ සිට — උතුරු මංතීරුව බටහිරට (⬅), දකුණු මංතීරුව නැගෙනහිරට (➡) යන නැව් සඳහා. තද රෝස පාට — වෙන්කිරීමේ කලාප.</li>
-        <li>වෙරළ සහ TSS අතර ප්‍රදේශය “වෙරළබඩ ගමනාගමන කලාපය” — කුඩා යාත්‍රා සහ ධීවරයන් සඳහා වෙන් කර ඇත.</li>
-        <li><b style="color:#8e24aa">දම් පාට පටි:</b> TSS සිට කොළඹ, බෙංගාල බොක්ක, අරාබි මුහුද, මලක්කා දෙසට නැව් අධිකව යන ප්‍රදේශ — මේවා <b>ආසන්න</b> ඒවා පමණි (නිල රේඛා නොවේ). බොහෝ විශාල නැව් දැන් TSS ට ~15 NM දකුණින් ද යයි.</li>
-        <li><b>නාවික සලකුණු:</b> OpenSeaMap හි ප්‍රදීපාගාර, බෝයා, නැංගුරම් පොළ, මුහුදු යට කේබල් වැනි දේ (zoom කළ විට පෙනේ, අන්තර්ජාලය අවශ්‍යයි).</li>
-        <li>කප්පල් මාර්ග, TSS සහ ඒ ආසන්න ප්‍රදේශ මාළු කලාප ලැයිස්තුවෙන් ඉවත් කර ඇත. 📍 ඔබ TSS ඇතුළේ හෝ 2 NM ඇතුළත නම් අනතුරු ඇඟවීමක් පෙන්වයි.</li>
-        <li>⚠️ විශාල නැව්වලට කුඩා ඔරු රේඩාර් එකෙන් නොපෙනීමට පුළුවන්. රාත්‍රියේ ලයිට් දල්වන්න, නැව් මාර්ගයේ නවතින්න හෝ දැල් දමන්න එපා, හරස් කරන විට කෙලින්ම (90°) ඉක්මනින් හරස් කරන්න.</li>
+        <li data-i18n="shLi1"></li>
+        <li data-i18n="shLi2"></li>
+        <li data-i18n="shLi3"></li>
+        <li data-i18n="shLi4"></li>
+        <li data-i18n="shLi5"></li>
+        <li data-i18n="shLi6"></li>
       </ul>
-      <p class="small muted">නීතිමය හෝ යාත්‍රා නාවික කටයුතු සඳහා නිල නාවික සිතියම් (Navy / NHO charts) සහ VMS භාවිතා කරන්න.</p>
+      <p class="small muted" data-i18n="chartsNote"></p>
 
-      <h3>නිල තොරතුරු</h3>
+      <h3 data-i18n="officialH"></h3>
       <ul class="links">
-        <li><a href="https://www.meteo.gov.lk" target="_blank" rel="noopener">කාලගුණ විද්‍යා දෙපාර්තමේන්තුව — meteo.gov.lk</a></li>
-        <li><a href="https://www.nara.ac.lk" target="_blank" rel="noopener">NARA — ධීවර කලාප පුරෝකථන (සඳුදා, බදාදා, සිකුරාදා)</a></li>
-        <li><a href="https://www.fisheries.gov.lk" target="_blank" rel="noopener">ධීවර හා ජලජ සම්පත් දෙපාර්තමේන්තුව</a></li>
-        <li><a href="https://incois.gov.in/portal/osf/srilanka_rimes/index.jsp" target="_blank" rel="noopener">INCOIS — ශ්‍රී ලංකා සාගර තත්ත්ව පුරෝකථනය</a></li>
+        <li><a href="https://www.meteo.gov.lk" target="_blank" rel="noopener" data-i18n="linkMeteo"></a></li>
+        <li><a href="https://www.nara.ac.lk" target="_blank" rel="noopener" data-i18n="linkNara"></a></li>
+        <li><a href="https://www.fisheries.gov.lk" target="_blank" rel="noopener" data-i18n="linkDfar"></a></li>
+        <li><a href="https://incois.gov.in/portal/osf/srilanka_rimes/index.jsp" target="_blank" rel="noopener" data-i18n="linkIncois"></a></li>
       </ul>
 
-      <h3>දත්ත මූලාශ්‍ර</h3>
+      <h3 data-i18n="srcH"></h3>
       <ul class="small">
-        <li>කාලගුණය සහ රළ: Open-Meteo (open-meteo.com)</li>
-        <li>මුහුදු උෂ්ණත්වය: NASA JPL MUR SST (NOAA CoastWatch ERDDAP)</li>
-        <li>හරිතප්‍රද: NOAA VIIRS gap-filled chlorophyll (NOAA CoastWatch ERDDAP)</li>
-        <li>මුහුදු සීමා: ශ්‍රී ලංකා-ඉන්දියා සීමා ගිවිසුම් 1974, 1976 (UN DOALOS)</li>
-        <li>කප්පල් මාර්ග: IMO Ships' Routeing — Off Dondra Head TSS; නාවික සලකුණු: © OpenSeaMap</li>
-        <li>සිතියම: © OpenStreetMap දායකයින්</li>
+        <li data-i18n="src1"></li>
+        <li data-i18n="src2"></li>
+        <li data-i18n="src3"></li>
+        <li data-i18n="src4"></li>
+        <li data-i18n="src5"></li>
+        <li data-i18n="src6"></li>
       </ul>
-      <p class="small muted">අන්තර්ජාලය නැති විට අවසන් වරට ලබාගත් දත්ත සහ බලපු සිතියම් කොටස් පෙන්වයි.</p>
-      <p class="small muted" id="appVer">App සංස්කරණය: v5</p>
+      <p class="small muted" data-i18n="offlineNote"></p>
+      <p class="small muted"><span data-i18n="appVer">App සංස්කරණය</span>: v6</p>
       <div id="diag" class="small muted"></div>
     </div>
   </section>
 </main>
 
 <nav class="tabs">
-  <button type="button" data-tab="map" class="on"><span>🗺️</span>සිතියම</button>
-  <button type="button" data-tab="wx"><span>🌊</span>කාලගුණය</button>
-  <button type="button" data-tab="zones"><span>🐟</span>කලාප</button>
-  <button type="button" data-tab="marks"><span>📌</span>මගේ</button>
-  <button type="button" data-tab="info"><span>ℹ️</span>තොරතුරු</button>
+  <button type="button" data-tab="map" class="on"><span>🗺️</span><b data-i18n="tabMap">සිතියම</b></button>
+  <button type="button" data-tab="wx"><span>🌊</span><b data-i18n="tabWx">කාලගුණය</b></button>
+  <button type="button" data-tab="zones"><span>🐟</span><b data-i18n="tabZones">කලාප</b></button>
+  <button type="button" data-tab="marks"><span>📌</span><b data-i18n="tabMarks">මගේ</b></button>
+  <button type="button" data-tab="info"><span>ℹ️</span><b data-i18n="tabInfo">තොරතුරු</b></button>
 </nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="boundaries.js?v=5"></script>
-<script src="calc.js?v=5"></script>
-<script src="app.js?v=5"></script>
+<script src="i18n.js?v=6"></script>
+<script src="boundaries.js?v=6"></script>
+<script src="calc.js?v=6"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>

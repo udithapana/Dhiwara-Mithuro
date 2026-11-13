@@ -282,10 +282,12 @@
     var x = Math.cos(lat1 * toR) * Math.sin(lat2 * toR) - Math.sin(lat1 * toR) * Math.cos(lat2 * toR) * Math.cos((lon2 - lon1) * toR);
     return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
   }
+  // text helper: uses the language file when loaded, otherwise Sinhala
+  function T(key, si) { return (root.DMI18N && root.DMI18N.t) ? root.DMI18N.t(key) : si; }
   var COMPASS_SI = ['උතුර', 'ඊසාන', 'නැගෙනහිර', 'ගිනිකොන', 'දකුණ', 'නිරිත', 'බටහිර', 'වයඹ'];
   function compassSi(deg) {
-    if (!isFinite(deg)) return '-';
-    return COMPASS_SI[Math.round(((deg % 360) + 360) % 360 / 45) % 8];
+    if (deg === null || deg === undefined || !isFinite(deg)) return '-';
+    return T('dirs', COMPASS_SI)[Math.round(((deg % 360) + 360) % 360 / 45) % 8];
   }
   function fmtDM(lat, lon) {
     function one(v, pos, neg) {
@@ -307,17 +309,18 @@
     return lvl;
   }
   var SAFETY_TEXT = ['මුහුදු යාමට සුදුසුයි', 'පරිස්සමින් — කුඩා යාත්‍රා අවදානම්', 'මුහුදු යාම නුසුදුසුයි'];
+  function safetyText(lvl) { return T('safe' + lvl, SAFETY_TEXT[lvl]); }
 
   function weatherTextSi(code) {
-    if (code === 0) return 'පැහැදිලි අහස';
-    if (code === 1 || code === 2) return 'අර්ධ වලාකුළු';
-    if (code === 3) return 'වලාකුළු සහිතයි';
-    if (code === 45 || code === 48) return 'මීදුම';
-    if (code >= 51 && code <= 57) return 'පොද වැසි';
-    if (code >= 61 && code <= 67) return code >= 65 ? 'තද වැසි' : 'වැසි';
-    if (code >= 80 && code <= 82) return code === 82 ? 'තද වැසි ඇලි' : 'වැසි ඇලි';
-    if (code === 95) return 'ගිගුරුම් සහිත වැසි';
-    if (code === 96 || code === 99) return 'තද ගිගුරුම් / අකුණු';
+    if (code === 0) return T('wxClear', 'පැහැදිලි අහස');
+    if (code === 1 || code === 2) return T('wxPartly', 'අර්ධ වලාකුළු');
+    if (code === 3) return T('wxCloudy', 'වලාකුළු සහිතයි');
+    if (code === 45 || code === 48) return T('wxFog', 'මීදුම');
+    if (code >= 51 && code <= 57) return T('wxDrizzle', 'පොද වැසි');
+    if (code >= 61 && code <= 67) return code >= 65 ? T('wxHeavyRain', 'තද වැසි') : T('wxRain', 'වැසි');
+    if (code >= 80 && code <= 82) return code === 82 ? T('wxHeavyShowers', 'තද වැසි ඇලි') : T('wxShowers', 'වැසි ඇලි');
+    if (code === 95) return T('wxThunder', 'ගිගුරුම් සහිත වැසි');
+    if (code === 96 || code === 99) return T('wxSevere', 'තද ගිගුරුම් / අකුණු');
     return '-';
   }
 
@@ -329,10 +332,10 @@
     var age = ((days % syn) + syn) % syn;
     var illum = Math.round((1 - Math.cos(2 * Math.PI * age / syn)) / 2 * 100);
     var name;
-    if (age < 1.5 || age > syn - 1.5) name = 'අමාවක';
-    else if (Math.abs(age - syn / 2) < 1.5) name = 'පසළොස්වක (පොහොය)';
-    else if (age < syn / 2) name = 'පුර පක්ෂය';
-    else name = 'අව පක්ෂය';
+    if (age < 1.5 || age > syn - 1.5) name = T('moonNew', 'අමාවක');
+    else if (Math.abs(age - syn / 2) < 1.5) name = T('moonFull', 'පසළොස්වක (පොහොය)');
+    else if (age < syn / 2) name = T('moonWax', 'පුර පක්ෂය');
+    else name = T('moonWane', 'අව පක්ෂය');
     return { age: age, illum: illum, name: name };
   }
 
@@ -344,7 +347,7 @@
     percentile: percentile, chlSuitability: chlSuitability, computePFZ: computePFZ,
     pickHotspots: pickHotspots, distKm: distKm, bearingDeg: bearingDeg,
     compassSi: compassSi, fmtDM: fmtDM, safetyLevel: safetyLevel,
-    SAFETY_TEXT: SAFETY_TEXT, weatherTextSi: weatherTextSi, moonInfo: moonInfo
+    SAFETY_TEXT: SAFETY_TEXT, safetyText: safetyText, weatherTextSi: weatherTextSi, moonInfo: moonInfo
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DMCalc = api;
