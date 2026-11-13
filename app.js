@@ -64,8 +64,14 @@
   // ---------- state ----------
   var S = {
     pfz: null, hotspots: [], ref: null, wx: null, me: null,
-    dangerDay: 0, danger: null, marks: sget('marks', [])
+    dangerDay: 0, danger: null, marks: sget('marks', []),
+    diag: { sst: '-', chl: '-' }
   };
+  function showDiag() {
+    var el = $('diag'); if (!el) return;
+    el.innerHTML = 'දත්ත තත්ත්වය — සීමා රේඛා: ' + (window.DMBounds ? '✔' : '✖ boundaries.js නැත') +
+      ' • SST: ' + esc(S.diag.sst) + ' • හරිතප්‍රද: ' + esc(S.diag.chl);
+  }
 
   // ---------- tabs ----------
   var map;
@@ -99,6 +105,7 @@
   var canvasR = L.canvas({ padding: 0.3 });
   drawBounds();
   drawShips();
+  if (!window.DMBounds) setTimeout(function () { mapMsg('⚠️ boundaries.js ගොනුව load වුණේ නැත — එය GitHub repo එකට upload කර ඇත්දැයි බලන්න.'); }, 500);
 
   HARBOURS.forEach(function (h) {
     L.circleMarker([h[1], h[2]], { radius: 4, color: '#0b3d5c', weight: 1, fillColor: '#fff', fillOpacity: 1, renderer: canvasR })
@@ -334,16 +341,26 @@
   }
   // coarse fallback: model SST from Open-Meteo on a 0.5° grid
   function loadOMSST() {
-    var lats = [], lons = [];
-    for (var a = C.BOX.latMin; a <= C.BOX.latMax + 1e-9; a += 0.5) for (var b = C.BOX.lonMin; b <= C.BOX.lonMax + 1e-9; b += 0.5) {
+    var lats = [], lons = [], st = 0.25;
+    for (var a = C.BOX.latMin; a <= C.BOX.latMax + 1e-9; a += st) for (var b = C.BOX.lonMin; b <= C.BOX.lonMax + 1e-9; b += st) {
       if (!C.isLandApprox(a, b)) { lats.push(a.toFixed(2)); lons.push(b.toFixed(2)); }
     }
-    var url = 'https://marine-api.open-meteo.com/v1/marine?latitude=' + lats.join(',') + '&longitude=' + lons.join(',') +
-      '&current=sea_surface_temperature&timezone=' + encodeURIComponent(TZ);
-    return fetchJSON(url, 45000).then(function (arr) {
-      if (!Array.isArray(arr)) arr = [arr];
-      var pts = arr.map(function (r, k) { return { lat: +lats[k], lon: +lons[k], val: r.current ? r.current.sea_surface_temperature : null }; });
-      return { grid: C.gridFromPoints(pts), date: arr[0] && arr[0].current ? arr[0].current.time : null, src: 'OM' };
+    var batches = [];
+    for (var i = 0; i < lats.length; i += 180) batches.push([lats.slice(i, i + 180), lons.slice(i, i + 180)]);
+    return Promise.all(batches.map(function (bt) {
+      var url = 'https://marine-api.open-meteo.com/v1/marine?latitude=' + bt[0].join(',') + '&longitude=' + bt[1].join(',') +
+        '&current=sea_surface_temperature&cell_selection=sea&timezone=' + encodeURIComponent(TZ);
+      return fetchJSON(url, 45000).then(function (arr) { return Array.isArray(arr) ? arr : [arr]; });
+    })).then(function (parts) {
+      var pts = [], k = 0, date = null;
+      parts.forEach(function (arr) {
+        arr.forEach(function (r) {
+          var v = r.current ? r.current.sea_surface_temperature : null;
+          if (!date && r.current) date = r.current.time;
+          pts.push({ lat: +lats[k], lon: +lons[k], val: v }); k++;
+        });
+      });
+      return { grid: C.gridFromPoints(pts), date: date, src: 'OM' };
     });
   }
   function loadCHL() {
@@ -358,12 +375,17 @@
 
   function loadPFZ(force) {
     var cached = sget('pfz3', null);
-    if (cached && cached.cells) { S.pfz = cached; drawPFZ(); }
+    if (cached && cached.cells) { S.pfz = cached; if (cached.diag) S.diag = cached.diag; drawPFZ(); showDiag(); }
     if (!force && cached && Date.now() - cached.time < PFZ_MAX_AGE) return;
     if (!navigator.onLine && cached) return;
     mapMsg('<span class="spin"></span> චන්ද්‍රිකා දත්ත බාගනිමින්… (විනාඩියක් පමණ ගත විය හැක)');
-    var sstP = loadMUR().catch(function () { return loadOMSST(); });
-    var chlP = loadCHL().catch(function () { return null; });
+    var sstP = loadMUR().then(function (r) { S.diag.sst = 'චන්ද්‍රිකා (MUR) ✔'; return r; }).catch(function (e) {
+      S.diag.sst = 'චන්ද්‍රිකා දත්ත අසාර්ථකයි (' + (e && e.message || e) + ') → Open-Meteo ආකෘති දත්ත';
+      return loadOMSST();
+    });
+    var chlP = loadCHL().then(function (r) { S.diag.chl = 'VIIRS ✔'; return r; }).catch(function (e) {
+      S.diag.chl = 'අසාර්ථකයි (' + (e && e.message || e) + ')'; return null;
+    });
     Promise.all([sstP, chlP]).then(function (res) {
       var sst = res[0], chl = res[1];
       var r = C.computePFZ(sst.grid, chl ? chl.grid : null);
@@ -374,9 +396,12 @@
           return [c.lat, c.lon, c.score, c.cls, Math.round(c.sst * 100) / 100, isFinite(c.chl) ? Math.round(c.chl * 1000) / 1000 : null];
         })
       };
+      pack.diag = S.diag;
       S.pfz = pack;
       sset('pfz3', pack);
-      mapMsg('');
+      showDiag();
+      if (sst.src === 'OM') { mapMsg('ℹ️ චන්ද්‍රිකා SST දත්ත ලබාගත නොහැකි විය — අඩු නිරවද්‍යතාවයක් ඇති ආකෘති දත්ත භාවිතා කළා. (තොරතුරු ටැබය බලන්න)'); setTimeout(function () { mapMsg(''); }, 8000); }
+      else mapMsg('');
       drawPFZ();
     }).catch(function () {
       mapMsg(cached ? 'නව චන්ද්‍රිකා දත්ත ලබාගත නොහැකි විය — පැරණි දත්ත පෙන්වයි.' : 'මාළු කලාප දත්ත ලබාගත නොහැකි විය. අන්තර්ජාලය පරීක්ෂා කර ⟳ ඔබන්න.');
@@ -666,7 +691,13 @@
     deferredPrompt.userChoice.then(function () { deferredPrompt = null; $('installBtn').classList.add('hidden'); });
   });
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js', { scope: './' }).catch(function () {}); });
+    var hadCtrl = !!navigator.serviceWorker.controller, reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (hadCtrl && !reloaded) { reloaded = true; location.reload(); }   // new version installed
+    });
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js', { scope: './' }).then(function (r) { r.update(); }).catch(function () {});
+    });
   }
 
   // ---------- start ----------
@@ -675,6 +706,7 @@
   if (place && isFinite(place.lat)) setPlace(place);
   else setPlace({ name: HARBOURS[0][0], lat: HARBOURS[0][1], lon: HARBOURS[0][2] });
   renderMarks();
+  showDiag();
   loadPFZ(false);
   var lastTab = sget('tab', 'map');
   if (lastTab && $('tab-' + lastTab)) showTab(lastTab);

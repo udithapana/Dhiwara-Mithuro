@@ -1,13 +1,13 @@
 /* ධීවර මිතුරා service worker — only touches caches named "dheewara-mithura-*" */
 var PREFIX = 'dheewara-mithura-';
-var SHELL = PREFIX + 'shell-v3';
+var SHELL = PREFIX + 'shell-v5';
 var TILES = PREFIX + 'tiles-v1';
 var RUNTIME = PREFIX + 'rt-v1';
 var KEEP = [SHELL, TILES, RUNTIME];
 var MAX_TILES = 600;
 
 var SHELL_FILES = [
-  './', 'index.html', 'style.css', 'boundaries.js', 'calc.js', 'app.js', 'manifest.json',
+  './', 'index.html', 'style.css?v=5', 'boundaries.js?v=5', 'calc.js?v=5', 'app.js?v=5', 'manifest.json',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'
@@ -15,7 +15,7 @@ var SHELL_FILES = [
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(SHELL).then(function (c) {
-    return Promise.all(SHELL_FILES.map(function (u) { return c.add(u).catch(function () {}); }));
+    return Promise.all(SHELL_FILES.map(function (u) { return c.add(new Request(u, { cache: 'reload' })).catch(function () {}); }));
   }).then(function () { return self.skipWaiting(); }));
 });
 
@@ -70,7 +70,8 @@ self.addEventListener('fetch', function (e) {
 
   // app's own files (same folder): network first so updates show, cache as fallback
   if (url.origin === self.location.origin && url.pathname.indexOf(new URL('./', self.registration.scope).pathname) === 0) {
-    e.respondWith(fetch(req).then(function (res) {
+    // always check GitHub for the newest file (skip the browser's HTTP cache)
+    e.respondWith(fetch(req, { cache: 'no-cache' }).then(function (res) {
       if (res.ok) { var copy = res.clone(); caches.open(SHELL).then(function (c) { c.put(req, copy); }); }
       return res;
     }).catch(function () {
