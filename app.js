@@ -222,6 +222,8 @@
         map.setView([lat, lon], 10);
         L.popup().setLatLng([lat, lon]).setContent(popupHtml(lat, lon, b.getAttribute('data-name'))).openOn(map);
       }, 80);
+    } else if (act === 'nav') {
+      if (window.DMTools) window.DMTools.setTarget(b.getAttribute('data-tv'));
     } else if (act === 'delmark') {
       var id = b.getAttribute('data-id');
       if (b.getAttribute('data-sure') !== '1') { b.setAttribute('data-sure', '1'); b.textContent = t('sureDel'); return; }
@@ -437,6 +439,7 @@
     });
     updateStamp();
     renderZones();
+    if (window.DMTools) window.DMTools.refreshTargets();
     renderSrcInfo();
   }
 
@@ -465,7 +468,8 @@
         (S.ref ? '<div>' + t('zoneDist', { d: n0(d), nm: n0(d / 1.852), dir: C.compassSi(b), deg: n0(b) }) + '</div>' : '') +
         '<div class="small muted">' + t('tempShort') + ' ' + n1(h.sst) + '°C' + (h.chl !== null && isFinite(h.chl) ? ' • ' + t('chl') + ' ' + h.chl.toFixed(2) + ' mg/m³' : '') + '</div>' +
         '<div class="btns"><button class="btn small" data-act="show" data-name="' + nm + '" data-lat="' + h.lat + '" data-lon="' + h.lon + '">' + t('btnMap') + '</button>' +
-        '<button class="btn small" data-act="wx" data-zone="' + (k + 1) + '" data-lat="' + h.lat + '" data-lon="' + h.lon + '">' + t('btnWxThere') + '</button></div>' +
+        '<button class="btn small" data-act="wx" data-zone="' + (k + 1) + '" data-lat="' + h.lat + '" data-lon="' + h.lon + '">' + t('btnWxThere') + '</button>' +
+        '<button class="btn small" data-act="nav" data-tv="z:' + k + '">' + t('btnGo') + '</button></div>' +
         '</div></div>';
     }).join('');
   }
@@ -590,6 +594,7 @@
     var cur = rows[i0];
     var next12 = rows.slice(i0, i0 + 12);
     var worst = next12.reduce(function (a, r) { return Math.max(a, r.lvl); }, 0);
+    alertBar(worst, pl);
     var moon = C.moonInfo(new Date());
     var html = '';
     html += '<div class="banner s' + worst + '"><div class="big">' + C.safetyText(worst) + '</div>' +
@@ -640,6 +645,13 @@
   }
   function kv(k, v, sub) { return '<div class="kv"><div class="k">' + k + '</div><div class="v">' + v + '</div>' + (sub ? '<div class="small">' + sub + '</div>' : '') + '</div>'; }
 
+  // red banner when the selected place is unsafe in the next 12 h
+  function alertBar(lvl, pl) {
+    var el = $('alertBar'); if (!el) return;
+    if (lvl === 2) { el.textContent = t('wxAlert', { p: placeName(pl) }); el.classList.remove('hidden'); }
+    else el.classList.add('hidden');
+  }
+
   // ---------- my spots ----------
   function addMark(lat, lon, note, how) {
     S.marks.unshift({ id: Date.now(), lat: lat, lon: lon, note: note || '', t: Date.now(), how: how || '' });
@@ -663,6 +675,7 @@
         .bindPopup('<b>' + esc(m.note || t('mySpot')) + '</b><br><span class="small">' + C.fmtDM(m.lat, m.lon) + '<br>' + fmtDateTime(m.t) + '</span>')
         .addTo(lyrMarks);
     });
+    if (window.DMTools) window.DMTools.refreshTargets();
     var el = $('markList');
     if (!S.marks.length) { el.innerHTML = '<p class="muted small">' + t('noMarks') + '</p>'; return; }
     el.innerHTML = S.marks.map(function (m) {
@@ -672,6 +685,7 @@
         '<div class="small muted">' + fmtDateTime(m.t) + (m.how ? ' • ' + esc(m.how) : '') + (S.ref ? ' • ' + t('kmFrom', { p: esc(placeName(S.ref)), d: n0(d) }) : '') + '</div>' +
         '<div class="btns"><button class="btn small" data-act="show" data-name="' + esc(m.note || t('mySpot')) + '" data-lat="' + m.lat + '" data-lon="' + m.lon + '">' + t('btnMap') + '</button>' +
         '<button class="btn small" data-act="wx" data-name="' + esc(m.note || t('mySpot')) + '" data-lat="' + m.lat + '" data-lon="' + m.lon + '">' + t('btnWx') + '</button>' +
+        '<button class="btn small" data-act="nav" data-tv="m:' + m.id + '">' + t('btnGo') + '</button>' +
         '<button class="btn small danger" data-act="delmark" data-id="' + m.id + '">' + t('btnDel') + '</button></div></div>';
     }).join('');
   }
@@ -701,6 +715,14 @@
       navigator.serviceWorker.register('sw.js', { scope: './' }).then(function (r) { r.update(); }).catch(function () {});
     });
   }
+
+  // ---------- shared with tools.js ----------
+  window.DMApp = {
+    map: map, lyrMarks: lyrMarks, lyrMe: lyrMe, canvasR: canvasR, S: S, HARBOURS: HARBOURS,
+    placeName: placeName, setPlace: setPlace, showTab: showTab, getPos: getPos, gpsErr: gpsErr,
+    mapMsg: mapMsg, buzz: buzz, esc: esc, n0: n0, n1: n1, num: num, fmtDateTime: fmtDateTime,
+    sget: sget, sset: sset, addMark: addMark, popupHtml: popupHtml, wxLast: function () { return sget('wxlast', null); }
+  };
 
   // ---------- start ----------
   try { localStorage.removeItem(KEY + 'pfz'); localStorage.removeItem(KEY + 'pfz2'); } catch (e) {}   // old caches

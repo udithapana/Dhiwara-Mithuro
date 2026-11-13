@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&family=Noto+Sans+Tamil:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 <header class="top">
@@ -24,11 +24,13 @@
       <option value="ta">தமிழ்</option>
       <option value="en">English</option>
     </select>
+    <button id="sosTop" class="btn sos-top" type="button">SOS</button>
     <button id="installBtn" class="btn ghost hidden" type="button" data-i18n="install">ස්ථාපනය</button>
     <button id="refreshBtn" class="btn ghost" type="button" data-i18n-aria="refresh" aria-label="යාවත්කාලීන කරන්න">⟳</button>
   </div>
 </header>
 
+<div id="alertBar" class="alert-bar hidden"></div>
 <div id="offlineBar" class="offline hidden" data-i18n="offline">අන්තර්ජාලය නැත — අවසන් වරට ලබාගත් දත්ත පෙන්වයි</div>
 
 <main>
@@ -91,6 +93,35 @@
   <!-- MY SPOTS -->
   <section id="tab-marks" class="tab">
     <div class="pad">
+      <div class="card">
+        <h2 data-i18n="compassH"></h2>
+        <div class="compass-wrap">
+          <svg id="rose" viewBox="0 0 220 220" width="220" height="220" aria-hidden="true">
+            <circle cx="110" cy="110" r="104" fill="#0b3d5c"/>
+            <g id="dial"></g>
+            <polygon points="110,4 102,22 118,22" fill="#ffd600"/>
+            <circle cx="110" cy="110" r="5" fill="#fff"/>
+          </svg>
+          <div id="hdgBig" class="hdg-big">—</div>
+        </div>
+        <div id="navAlert" class="note err hidden"></div>
+        <div class="grid2" id="navReadout"></div>
+        <p id="navNote" class="small muted"></p>
+        <button id="navBtn" class="btn primary" type="button" data-i18n="navStart"></button>
+        <h3 data-i18n="target"></h3>
+        <div class="row"><select id="tgtSel"></select><button id="homeBtn" class="btn" type="button" data-i18n="backHome"></button></div>
+        <div id="tgtInfo" class="tgt-info"></div>
+        <p class="small muted" data-i18n="liveAlert"></p>
+        <button id="shareBtn" class="btn" type="button" data-i18n="shareLoc"></button>
+        <div id="shareOut"></div>
+      </div>
+      <div class="card">
+        <h3 data-i18n="routesH"></h3>
+        <input id="routeName" type="text" maxlength="60" data-i18n-ph="recName">
+        <button id="recBtn" class="btn primary" type="button" data-i18n="recStart" style="margin-top:8px"></button>
+        <div id="recStatus" class="small muted"></div>
+        <div id="routeList"></div>
+      </div>
       <h2 data-i18n="marksTitle">මගේ ස්ථාන</h2>
       <p class="muted small" data-i18n="marksIntro"></p>
       <form id="markForm" class="card">
@@ -99,6 +130,46 @@
         <div id="markMsg" class="small muted"></div>
       </form>
       <div id="markList"></div>
+    </div>
+  </section>
+
+  <!-- TOOLS -->
+  <section id="tab-tools" class="tab">
+    <div class="pad">
+      <div class="card sos-card" id="sosCard">
+        <h2 data-i18n="sosH"></h2>
+        <p class="small" data-i18n="sosIntro"></p>
+        <button id="sosBtn" class="btn sos-big" type="button" data-i18n="sosBtn"></button>
+        <div id="sosOut"></div>
+        <p class="small" data-i18n="beaconIntro" style="margin-top:12px"></p>
+        <button id="beaconBtn" class="btn beacon-btn" type="button" data-i18n="beaconBtn"></button>
+        <button id="editProfileBtn" class="btn" type="button" data-i18n="editProfile" style="width:100%;margin-top:10px"></button>
+        <h3 data-i18n="hotlinesH"></h3>
+        <div id="hotlines"></div>
+        <h3 data-i18n="contactsH"></h3>
+        <form id="contactsForm"></form>
+      </div>
+      <div class="card">
+        <h3 data-i18n="fuelH"></h3>
+        <form id="fuelForm" class="fuel-form">
+          <label><span data-i18n="fFrom"></span><select id="fFrom"></select></label>
+          <label><span data-i18n="fTo"></span><select id="fTo"></select></label>
+          <label><span data-i18n="fManual"></span><input id="fNm" type="number" min="0" step="0.1" inputmode="decimal"></label>
+          <label class="chk"><input id="fRound" type="checkbox" checked> <span data-i18n="fRound"></span></label>
+          <label><span data-i18n="fSpeed"></span><input id="fSpeed" type="number" min="1" step="0.5" inputmode="decimal"></label>
+          <label><span data-i18n="fLph"></span><input id="fLph" type="number" min="0.1" step="0.1" inputmode="decimal"></label>
+          <label><span data-i18n="fWind"></span><input id="fWind" type="number" min="0" step="1" inputmode="decimal"></label>
+          <label><span data-i18n="fReserve"></span><input id="fRes" type="number" min="0" step="5" inputmode="decimal"></label>
+          <label><span data-i18n="fPrice"></span><input id="fPrice" type="number" min="0" step="1" inputmode="decimal"></label>
+          <button class="btn primary" type="submit" data-i18n="fCalc"></button>
+        </form>
+        <div id="fuelOut" class="fuel-out"></div>
+        <p class="small muted" data-i18n="fNote"></p>
+      </div>
+      <div class="card"><h3 data-i18n="checkH"></h3><div id="checklist"></div></div>
+      <div class="card"><h3 data-i18n="lifeH"></h3><ul id="lifeList" class="small"></ul></div>
+      <div class="card"><h3 data-i18n="ecoH"></h3><ul id="ecoList" class="small"></ul></div>
+      <div class="card"><h3 data-i18n="servH"></h3><ul id="servList" class="links small"></ul></div>
     </div>
   </section>
 
@@ -159,24 +230,66 @@
         <li data-i18n="src6"></li>
       </ul>
       <p class="small muted" data-i18n="offlineNote"></p>
-      <p class="small muted"><span data-i18n="appVer">App සංස්කරණය</span>: v6</p>
+      <p class="small muted"><span data-i18n="appVer">App සංස්කරණය</span>: v8</p>
       <div id="diag" class="small muted"></div>
     </div>
   </section>
 </main>
 
+<!-- first-run details page -->
+<div id="setup" class="setup hidden">
+  <div class="setup-head">
+    <img src="dm-icon-192.png" alt="" width="44" height="44">
+    <h2 data-i18n="setupTitle"></h2>
+    <select id="setupLang" class="lang-sel" data-i18n-aria="language">
+      <option value="si">සිංහල</option><option value="ta">தமிழ்</option><option value="en">English</option>
+    </select>
+  </div>
+  <form id="setupForm" class="pad" novalidate>
+    <p class="small" data-i18n="setupIntro"></p>
+    <label class="fld"><span data-i18n="pName"></span><input id="pName" type="text" maxlength="50" autocomplete="name"></label>
+    <label class="fld"><span data-i18n="pPhone"></span><input id="pPhone" type="tel" maxlength="20" autocomplete="tel" inputmode="tel"></label>
+    <div class="grid2">
+      <label class="fld"><span data-i18n="pBoat"></span><input id="pBoat" type="text" maxlength="40"></label>
+      <label class="fld"><span data-i18n="pReg"></span><input id="pReg" type="text" maxlength="30"></label>
+      <label class="fld"><span data-i18n="pCrew"></span><input id="pCrew" type="number" min="1" max="50" inputmode="numeric"></label>
+      <label class="fld"><span data-i18n="pHarb"></span><select id="pHarb"></select></label>
+    </div>
+    <h3 data-i18n="pContacts"></h3>
+    <div id="pContacts"></div>
+    <div id="setupErr" class="note err hidden"></div>
+    <button class="btn primary" type="submit" data-i18n="pSave" style="margin-top:10px"></button>
+    <button id="setupCancel" class="btn hidden" type="button" data-i18n="pCancel" style="width:100%;margin-top:8px"></button>
+    <p class="small muted" data-i18n="pRequired"></p>
+  </form>
+</div>
+
+<!-- SOS siren + light -->
+<div id="beacon" class="beacon hidden">
+  <div class="beacon-sos">SOS</div>
+  <div class="beacon-hint" data-i18n="beaconHint"></div>
+  <div id="beaconMsg" class="beacon-hint"></div>
+  <div class="beacon-ctl">
+    <button id="bSiren" class="btn" type="button" data-i18n="beaconSiren"></button>
+    <button id="bTorch" class="btn" type="button" data-i18n="beaconTorch"></button>
+  </div>
+  <button id="bStop" class="btn beacon-stop" type="button" data-i18n="beaconStop"></button>
+</div>
+
 <nav class="tabs">
   <button type="button" data-tab="map" class="on"><span>🗺️</span><b data-i18n="tabMap">සිතියම</b></button>
   <button type="button" data-tab="wx"><span>🌊</span><b data-i18n="tabWx">කාලගුණය</b></button>
   <button type="button" data-tab="zones"><span>🐟</span><b data-i18n="tabZones">කලාප</b></button>
-  <button type="button" data-tab="marks"><span>📌</span><b data-i18n="tabMarks">මගේ</b></button>
+  <button type="button" data-tab="marks"><span>🧭</span><b data-i18n="tabNav">මඟ</b></button>
+  <button type="button" data-tab="tools"><span>🛟</span><b data-i18n="tabTools">මෙවලම්</b></button>
   <button type="button" data-tab="info"><span>ℹ️</span><b data-i18n="tabInfo">තොරතුරු</b></button>
 </nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-<script src="i18n.js?v=6"></script>
-<script src="boundaries.js?v=6"></script>
-<script src="calc.js?v=6"></script>
-<script src="app.js?v=6"></script>
+<script src="i18n.js?v=8"></script>
+<script src="boundaries.js?v=8"></script>
+<script src="calc.js?v=8"></script>
+<script src="app.js?v=8"></script>
+<script src="tools.js?v=8"></script>
 </body>
 </html>
