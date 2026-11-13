@@ -61,12 +61,32 @@
     return m;
   }
 
+  // Traffic Separation Scheme off Dondra Head (IMO 1980), lat bands in degrees
+  var TSS = {
+    lonW: 80 + 32.38 / 60, lonE: 80 + 38.54 / 60,
+    parts: [
+      { name: 'sepA', s: 5 + 50.2 / 60, n: 5 + 52.2 / 60 }, { name: 'laneW', s: 5 + 47.2 / 60, n: 5 + 50.2 / 60 },
+      { name: 'sepB', s: 5 + 44.2 / 60, n: 5 + 47.2 / 60 }, { name: 'laneE', s: 5 + 41.2 / 60, n: 5 + 44.2 / 60 }
+    ]
+  };
+  // {part: name or null, nm: distance (NM) to the TSS box (0 inside)}
+  function tssInfo(lat, lon) {
+    var s = TSS.parts[3].s, n = TSS.parts[0].n;
+    var dLat = lat < s ? s - lat : (lat > n ? lat - n : 0);
+    var dLon = lon < TSS.lonW ? TSS.lonW - lon : (lon > TSS.lonE ? lon - TSS.lonE : 0);
+    var nm = Math.sqrt(Math.pow(dLat * 60, 2) + Math.pow(dLon * 60 * Math.cos(lat * Math.PI / 180), 2));
+    var part = null;
+    if (nm === 0) TSS.parts.forEach(function (p) { if (lat >= p.s && lat <= p.n) part = p.name; });
+    return { part: part, nm: nm };
+  }
+
   // Cells kept OUT of the fishing-zone estimate: India's side of the IMBL,
   // within 2 NM of the IMBL, or beyond Sri Lanka's 200 NM EEZ (approx.).
   function isExcluded(lat, lon) {
     var im = imblInfo(lat, lon);
     if (!im.slSide || im.km < 2 * 1.852) return true;
     if (coastDistKm(lat, lon) > 200 * 1.852) return true;
+    if (tssInfo(lat, lon).nm < 1) return true;            // shipping lanes off Dondra Head
     return false;
   }
   function isLandApprox(lat, lon) {
@@ -318,7 +338,7 @@
 
   var api = {
     BOX: BOX, IMBL: IMBL, isExcluded: isExcluded, isLandApprox: isLandApprox,
-    imblInfo: imblInfo, coastDistKm: coastDistKm,
+    imblInfo: imblInfo, coastDistKm: coastDistKm, tssInfo: tssInfo, segDistKm: segDistKm,
     parseErddapGrid: parseErddapGrid, gridFromPoints: gridFromPoints,
     smoothGrid: smoothGrid, gradientGrid: gradientGrid, sampleGrid: sampleGrid,
     percentile: percentile, chlSuitability: chlSuitability, computePFZ: computePFZ,

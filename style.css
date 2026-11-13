@@ -63,6 +63,7 @@ form.card{display:flex;flex-direction:column;gap:8px}
 .pop .btns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .hs-icon{background:#ff6d00;color:#fff;border:2px solid #fff;border-radius:50%;font-weight:700;font-size:13px;
   display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.lane-arrow{color:#880e4f;font-size:15px;font-weight:700;text-align:center;line-height:16px;text-shadow:0 0 3px #fff}
 .mark-icon{font-size:22px;line-height:1}
 
 /* weather */

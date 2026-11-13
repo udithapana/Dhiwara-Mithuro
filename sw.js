@@ -1,6 +1,6 @@
 /* ධීවර මිතුරා service worker — only touches caches named "dheewara-mithura-*" */
 var PREFIX = 'dheewara-mithura-';
-var SHELL = PREFIX + 'shell-v2';
+var SHELL = PREFIX + 'shell-v3';
 var TILES = PREFIX + 'tiles-v1';
 var RUNTIME = PREFIX + 'rt-v1';
 var KEEP = [SHELL, TILES, RUNTIME];
@@ -43,7 +43,7 @@ self.addEventListener('fetch', function (e) {
   if (/open-meteo\.com$/.test(url.hostname) || url.hostname === 'coastwatch.pfeg.noaa.gov') return;
 
   // map tiles: cache first, keep what the user has looked at
-  if (url.hostname === 'tile.openstreetmap.org') {
+  if (url.hostname === 'tile.openstreetmap.org' || url.hostname === 'tiles.openseamap.org') {
     e.respondWith(caches.open(TILES).then(function (c) {
       return c.match(req).then(function (hit) {
         if (hit) return hit;

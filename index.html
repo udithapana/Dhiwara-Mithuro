@@ -34,6 +34,8 @@
       <label><input type="checkbox" id="lyrPfz" checked> මාළු කලාප</label>
       <label><input type="checkbox" id="lyrDanger"> මුහුදු අවදානම</label>
       <label><input type="checkbox" id="lyrBounds" checked> මුහුදු සීමා</label>
+      <label><input type="checkbox" id="lyrShips" checked> කප්පල් මාර්ග</label>
+      <label><input type="checkbox" id="lyrSeamark"> නාවික සලකුණු</label>
       <label><input type="checkbox" id="lyrMarks" checked> මගේ ස්ථාන</label>
       <div id="dangerDays" class="chips hidden">
         <button type="button" data-day="0" class="chip on">අද</button>
@@ -50,6 +52,10 @@
         <div><b class="ln" style="border-color:#6a1b9a"></b>EEZ 200 NM</div>
         <div><b class="ln" style="border-color:#2e7d32"></b>24 NM</div>
         <div><b class="ln" style="border-color:#1565c0"></b>12 NM</div>
+      </div>
+      <div id="legendShips">
+        <div><i style="background:#d81b60"></i>TSS කප්පල් මාර්ගය</div>
+        <div><i style="background:rgba(142,36,170,.35)"></i>නැව් ගමනාගමනය (ආසන්න)</div>
       </div>
       <div id="legendDanger" class="hidden"><i style="background:#e53935"></i>අවදානම් මුහුද</div>
     </div>
@@ -119,6 +125,15 @@
         <li>තිත් කළු රේඛා: පෝක් සමුද්‍ර සන්ධියේ සහ මන්නාරම් බොක්කේ ඓතිහාසික ජල සීමා.</li>
         <li>📍 බොත්තම ඔබූ විට ඔබ ඉන්දීය සීමාවට 5 NM ට වඩා ළඟ නම් හෝ සීමාව පසුකර ඇත්නම් අනතුරු ඇඟවීමක් පෙන්වයි.</li>
       </ul>
+      <h3>කප්පල් ගමන් මාර්ග</h3>
+      <ul class="small">
+        <li><b style="color:#ad1457">දොන්ද්‍ර තුඩුව Traffic Separation Scheme (TSS):</b> IMO විසින් 1980 දී ස්ථාපිත කළ නිල නැව් මාර්ගය (Ships' Routeing ඛණ්ඩාංක). දොන්ද්‍ර තුඩුවට දකුණින් NM 3–4 පමණ සිට — උතුරු මංතීරුව බටහිරට (⬅), දකුණු මංතීරුව නැගෙනහිරට (➡) යන නැව් සඳහා. තද රෝස පාට — වෙන්කිරීමේ කලාප.</li>
+        <li>වෙරළ සහ TSS අතර ප්‍රදේශය “වෙරළබඩ ගමනාගමන කලාපය” — කුඩා යාත්‍රා සහ ධීවරයන් සඳහා වෙන් කර ඇත.</li>
+        <li><b style="color:#8e24aa">දම් පාට පටි:</b> TSS සිට කොළඹ, බෙංගාල බොක්ක, අරාබි මුහුද, මලක්කා දෙසට නැව් අධිකව යන ප්‍රදේශ — මේවා <b>ආසන්න</b> ඒවා පමණි (නිල රේඛා නොවේ). බොහෝ විශාල නැව් දැන් TSS ට ~15 NM දකුණින් ද යයි.</li>
+        <li><b>නාවික සලකුණු:</b> OpenSeaMap හි ප්‍රදීපාගාර, බෝයා, නැංගුරම් පොළ, මුහුදු යට කේබල් වැනි දේ (zoom කළ විට පෙනේ, අන්තර්ජාලය අවශ්‍යයි).</li>
+        <li>කප්පල් මාර්ග, TSS සහ ඒ ආසන්න ප්‍රදේශ මාළු කලාප ලැයිස්තුවෙන් ඉවත් කර ඇත. 📍 ඔබ TSS ඇතුළේ හෝ 2 NM ඇතුළත නම් අනතුරු ඇඟවීමක් පෙන්වයි.</li>
+        <li>⚠️ විශාල නැව්වලට කුඩා ඔරු රේඩාර් එකෙන් නොපෙනීමට පුළුවන්. රාත්‍රියේ ලයිට් දල්වන්න, නැව් මාර්ගයේ නවතින්න හෝ දැල් දමන්න එපා, හරස් කරන විට කෙලින්ම (90°) ඉක්මනින් හරස් කරන්න.</li>
+      </ul>
       <p class="small muted">නීතිමය හෝ යාත්‍රා නාවික කටයුතු සඳහා නිල නාවික සිතියම් (Navy / NHO charts) සහ VMS භාවිතා කරන්න.</p>
 
       <h3>නිල තොරතුරු</h3>
@@ -135,6 +150,7 @@
         <li>මුහුදු උෂ්ණත්වය: NASA JPL MUR SST (NOAA CoastWatch ERDDAP)</li>
         <li>හරිතප්‍රද: NOAA VIIRS gap-filled chlorophyll (NOAA CoastWatch ERDDAP)</li>
         <li>මුහුදු සීමා: ශ්‍රී ලංකා-ඉන්දියා සීමා ගිවිසුම් 1974, 1976 (UN DOALOS)</li>
+        <li>කප්පල් මාර්ග: IMO Ships' Routeing — Off Dondra Head TSS; නාවික සලකුණු: © OpenSeaMap</li>
         <li>සිතියම: © OpenStreetMap දායකයින්</li>
       </ul>
       <p class="small muted">අන්තර්ජාලය නැති විට අවසන් වරට ලබාගත් දත්ත සහ බලපු සිතියම් කොටස් පෙන්වයි.</p>

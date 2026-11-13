@@ -92,8 +92,13 @@
   var lyrMe = L.layerGroup().addTo(map);
   var lyrHarb = L.layerGroup().addTo(map);
   var lyrBounds = L.layerGroup().addTo(map);
+  var lyrShips = L.layerGroup().addTo(map);
+  var lyrSeamark = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
+    maxZoom: 13, opacity: 0.9, attribution: '© OpenSeaMap'
+  });
   var canvasR = L.canvas({ padding: 0.3 });
   drawBounds();
+  drawShips();
 
   HARBOURS.forEach(function (h) {
     L.circleMarker([h[1], h[2]], { radius: 4, color: '#0b3d5c', weight: 1, fillColor: '#fff', fillOpacity: 1, renderer: canvasR })
@@ -106,6 +111,14 @@
   $('lyrBounds').addEventListener('change', function () {
     if (this.checked) lyrBounds.addTo(map); else map.removeLayer(lyrBounds);
     $('legendBounds').classList.toggle('hidden', !this.checked);
+  });
+  $('lyrShips').addEventListener('change', function () {
+    if (this.checked) lyrShips.addTo(map); else map.removeLayer(lyrShips);
+    $('legendShips').classList.toggle('hidden', !this.checked);
+  });
+  $('lyrSeamark').addEventListener('change', function () {
+    if (this.checked) { lyrSeamark.addTo(map); if (map.getZoom() < 9) mapMsg('නාවික සලකුණු (ප්‍රදීපාගාර, බෝයා, කේබල්, නැංගුරම් පොළ) පෙනෙන්නේ zoom කළ විට — වරායක් ළඟට zoom කරන්න.'); setTimeout(function () { mapMsg(''); }, 6000); }
+    else map.removeLayer(lyrSeamark);
   });
   $('lyrMarks').addEventListener('change', function () { if (this.checked) lyrMarks.addTo(map); else map.removeLayer(lyrMarks); });
   $('lyrDanger').addEventListener('change', function () {
@@ -152,6 +165,8 @@
       if (isFinite(c[5]) && c[5] !== null) h += '<br>හරිතප්‍රද: ' + c[5].toFixed(2) + ' mg/m³';
     }
     h += '<br>' + boundaryNote(lat, lon);
+    var sn = shipNote(lat, lon);
+    if (sn) h += '<br>' + sn;
     if (S.ref) {
       var d = C.distKm(S.ref.lat, S.ref.lon, lat, lon), b = C.bearingDeg(S.ref.lat, S.ref.lon, lat, lon);
       h += '<br><span class="small">' + esc(S.ref.name) + ' සිට ' + n1(d) + ' km (' + n1(d / 1.852) + ' NM), ' + C.compassSi(b) + ' ' + n0(b) + '°</span>';
@@ -219,6 +234,11 @@
       var im = C.imblInfo(p.lat, p.lon), nm = im.km / 1.852;
       if (!im.slSide) { mapMsg('🚨 <b>ඔබ ඉන්දීය මුහුදු සීමාව පසුකර ඇත!</b> වහාම ශ්‍රී ලංකා මුහුදට ආපසු යන්න.'); buzz(); }
       else if (nm < 5) { mapMsg('⚠️ <b>ඉන්දීය සීමාවට ' + n1(nm) + ' NM පමණයි.</b> ඉදිරියට නොයන්න.'); buzz(); }
+      else {
+        var ts = C.tssInfo(p.lat, p.lon);
+        if (ts.part) { mapMsg('🚢 <b>ඔබ කප්පල් ගමන් මාර්ගයේ (TSS) ඇත!</b> මෙහි නවතින්න / දැල් දමන්න එපා. ඉක්මනින් ඉවත් වන්න.'); buzz(); }
+        else if (ts.nm < 2) { mapMsg('🚢 <b>කප්පල් ගමන් මාර්ගයට (TSS) ' + n1(ts.nm) + ' NM පමණයි.</b> ලයිට් දල්වා, අවධානයෙන් සිටින්න.'); buzz(); }
+      }
     }).catch(function (e) { mapMsg(gpsErr(e)); setTimeout(function () { mapMsg(''); }, 6000); });
   });
 
@@ -254,6 +274,56 @@
     lines([B.histMannar, B.histPalk], { color: '#555', weight: 1.5, dashArray: '2 5' }, '<b>ඓතිහාසික ජල සීමාව</b><br><span class="small">පෝක් සමුද්‍ර සන්ධිය / මන්නාරම් බොක්ක</span>');
   }
 
+  // ---------- ship lanes ----------
+  function routeDistNm(lat, lon) {
+    var B = window.DMBounds, m = Infinity;
+    if (!B || !B.routes) return m;
+    Object.keys(B.routes).forEach(function (k) {
+      var r = B.routes[k];
+      for (var i = 0; i < r.length - 1; i++) m = Math.min(m, C.segDistKm(lat, lon, r[i][0], r[i][1], r[i + 1][0], r[i + 1][1]).d / 1.852);
+    });
+    return m;
+  }
+  function shipNote(lat, lon) {
+    var ts = C.tssInfo(lat, lon);
+    if (ts.part) return '<span class="small" style="color:#ad1457"><b>🚢 දොන්ද්‍ර තුඩුව කප්පල් මාර්ගය (TSS)</b> — නැව් අධිකයි, මෙහි මාළු ඇල්ලීම අනතුරුදායකයි</span>';
+    if (ts.nm < 3) return '<span class="small" style="color:#ad1457">🚢 කප්පල් මාර්ගයට (TSS) ' + n1(ts.nm) + ' NM — අවධානයෙන් සිටින්න</span>';
+    if (routeDistNm(lat, lon) < 4) return '<span class="small" style="color:#6a1b9a">🚢 නැව් ගමනාගමනය අධික විය හැකි ප්‍රදේශයක් (ආසන්න)</span>';
+    return '';
+  }
+  function drawShips() {
+    var B = window.DMBounds;
+    if (!B || !B.tss) return;
+    var TSS_TEXT = {
+      sepA: '<b>වෙන්කිරීමේ කලාපය (Separation zone)</b> — නැව් ගමන් මාර්ග දෙක අතර/වෙරළ පැත්තේ ආරක්ෂිත කලාපය',
+      laneW: '<b>⬅ බටහිරට යන නැව් මාර්ගය</b> (Westbound lane, 3 NM)',
+      sepB: '<b>වෙන්කිරීමේ කලාපය (Separation zone)</b> — ප්‍රතිවිරුද්ධ දිශාවට යන නැව් වෙන් කරයි',
+      laneE: '<b>➡ නැගෙනහිරට යන නැව් මාර්ගය</b> (Eastbound lane, 3 NM)'
+    };
+    var r = B.routes || {};
+    var rl = {
+      west: 'අරාබි මුහුද / රතු මුහුද / යුරෝපය දෙසට', east: 'මලක්කා සමුද්‍ර සන්ධිය / සිංගප්පූරුව දෙසට',
+      colombo: 'කොළඹ වරාය දෙසට', bengal: 'බෙංගාල බොක්ක / චෙන්නායි / කල්කටා දෙසට',
+      offshore: 'TSS ට ~15 NM දකුණින් යන මාර්ගය (බොහෝ විශාල නැව් භාවිතා කරයි)'
+    };
+    Object.keys(r).forEach(function (k) {
+      var tip = '<b>🚢 නැව් ගමන් මාර්ගය (ආසන්න)</b><br><span class="small">' + (rl[k] || '') + '<br>රාත්‍රියේ ලයිට් දල්වා සිටින්න</span>';
+      L.polyline(r[k], { color: '#8e24aa', weight: 14, opacity: 0.15, renderer: canvasR, lineCap: 'round' }).bindTooltip(tip, { sticky: true }).addTo(lyrShips);
+      L.polyline(r[k], { color: '#8e24aa', weight: 1.5, opacity: 0.8, dashArray: '8 6', renderer: canvasR, interactive: false }).addTo(lyrShips);
+    });
+    ['laneW', 'laneE', 'sepA', 'sepB'].forEach(function (k) {
+      var sep = k.indexOf('sep') === 0;
+      L.polygon(B.tss[k], { color: '#ad1457', weight: 1, fillColor: sep ? '#d81b60' : '#f48fb1', fillOpacity: sep ? 0.55 : 0.3, renderer: canvasR })
+        .bindTooltip('<b>දොන්ද්‍ර තුඩුව කප්පල් ගමන් මාර්ග (TSS)</b><br>' + TSS_TEXT[k] + '<br><span class="small">IMO 1980 • ලොව කාර්යබහුලම නැව් මාර්ගවලින් එකක්. වෙරළ සහ TSS අතර ප්‍රදේශය “වෙරළබඩ ගමනාගමන කලාපය” (inshore traffic zone) — කුඩා යාත්‍රා සහ ධීවරයන් සඳහා.</span>', { sticky: true })
+        .addTo(lyrShips);
+    });
+    function arrowAt(poly, ch) {
+      var la = (poly[0][0] + poly[2][0]) / 2, lo = (poly[0][1] + poly[1][1]) / 2;
+      L.marker([la, lo], { interactive: false, icon: L.divIcon({ className: '', html: '<div class="lane-arrow">' + ch + '</div>', iconSize: [30, 16], iconAnchor: [15, 8] }) }).addTo(lyrShips);
+    }
+    arrowAt(B.tss.laneW, '⬅'); arrowAt(B.tss.laneE, '➡');
+  }
+
   // ---------- fishing zones (PFZ) ----------
   function loadMUR() {
     var q = 'analysed_sst[(last)][(' + C.BOX.latMin + '):10:(' + C.BOX.latMax + ')][(' + C.BOX.lonMin + '):10:(' + C.BOX.lonMax + ')]';
@@ -287,7 +357,7 @@
   }
 
   function loadPFZ(force) {
-    var cached = sget('pfz2', null);
+    var cached = sget('pfz3', null);
     if (cached && cached.cells) { S.pfz = cached; drawPFZ(); }
     if (!force && cached && Date.now() - cached.time < PFZ_MAX_AGE) return;
     if (!navigator.onLine && cached) return;
@@ -305,7 +375,7 @@
         })
       };
       S.pfz = pack;
-      sset('pfz2', pack);
+      sset('pfz3', pack);
       mapMsg('');
       drawPFZ();
     }).catch(function () {
@@ -600,7 +670,7 @@
   }
 
   // ---------- start ----------
-  try { localStorage.removeItem(KEY + 'pfz'); } catch (e) {}   // old cache (before boundary update)
+  try { localStorage.removeItem(KEY + 'pfz'); localStorage.removeItem(KEY + 'pfz2'); } catch (e) {}   // old caches
   var place = sget('place', null);
   if (place && isFinite(place.lat)) setPlace(place);
   else setPlace({ name: HARBOURS[0][0], lat: HARBOURS[0][1], lon: HARBOURS[0][2] });
